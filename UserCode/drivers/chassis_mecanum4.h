@@ -19,9 +19,9 @@
  * rad/s to round/min
  * @param __RPS__ rad/s
  */
-#define RPS2RPM(__RPS__) ((__RPS__) * 60.0f / (2 * M_PI))
+#define RPS2RPM(__RPS__) ((__RPS__) * 60.0f / (2 * 3.14159265358979323846f))
 
-#define DEG2RAD(__DEG__) ((__DEG__) * (float) M_PI / 180.0f)
+#define DEG2RAD(__DEG__) ((__DEG__) * (float) 3.14159265358979323846f / 180.0f)
 
 typedef enum
 {

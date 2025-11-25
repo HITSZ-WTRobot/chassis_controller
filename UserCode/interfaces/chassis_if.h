@@ -10,13 +10,14 @@
 #define CHASSIS_IF_H
 
 #define __CHASSIS_IF_VERSION__ "0.0.1"
-
+#define _USE_MATH_DEFINES
 #include "cmsis_os2.h"
 #include "libs/pid_pd.h"
 
 #include <stdbool.h>
 
-#define CHASSIS_MECANUM4
+// #define CHASSIS_MECANUM4
+#define CHASSIS_OMNI4
 
 #ifdef CHASSIS_MECANUM4
 #    include "drivers/chassis_mecanum4.h"
@@ -24,11 +25,18 @@
 #    define ChassisDriver_Config_t Mecanum4_Config_t
 #endif
 
-#if defined(CHASSIS_MECANUM4) != 1
+#ifdef CHASSIS_OMNI4
+#    include "drivers/chassis_omni4.h"
+#    define ChassisDriver_t        Omni4_t
+#    define ChassisDriver_Config_t Omni4_Config_t
+#endif
+
+
+#if (defined(CHASSIS_MECANUM4) + defined(CHASSIS_OMNI4)) != 1
 #    error "There must be one and only one chassis type enabled at a time."
 #endif
 
-#define DEG2RAD(__DEG__) ((__DEG__) * (float) M_PI / 180.0f)
+#define DEG2RAD(__DEG__) ((__DEG__) * (float) 3.14159265358979323846f / 180.0f)
 
 typedef struct
 {

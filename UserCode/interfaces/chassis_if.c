@@ -20,6 +20,14 @@ extern "C"
 #    define ChassisForward_GetX         Mecanum4Forward_GetX
 #    define ChassisForward_GetY         Mecanum4Forward_GetY
 #endif
+#ifdef CHASSIS_OMNI4
+#    define ChassisDriver_Init          Omni4_Init
+#    define ChassisDriver_ApplyVelocity Omni4_ApplyVelocity
+#    define ChassisDriver_Update        Omni4_Update
+#    define ChassisForward_GetYaw       Omni4Forward_GetYaw
+#    define ChassisForward_GetX         Omni4Forward_GetX
+#    define ChassisForward_GetY         Omni4Forward_GetY
+#endif
 
 static uint32_t isr_lock()
 {
