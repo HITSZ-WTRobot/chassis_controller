@@ -99,7 +99,7 @@ void Mecanum4_ApplyVelocity(Mecanum4_t* chassis, const float vx, const float vy,
  * @note 推荐控制调用频率 1kHz，调用频率将会影响轮子的 PID 参数
  * @param chassis 底盘
  */
-void Mecanum4_Update(Mecanum4_t* chassis)
+void Mecanum4_Update(const Mecanum4_t* chassis)
 {
     for (size_t i = 0; i < MECANUM4_WHEEL_MAX; i++)
     {

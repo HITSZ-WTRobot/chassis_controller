@@ -67,7 +67,7 @@ typedef struct
 
 void Mecanum4_Init(Mecanum4_t* chassis, const Mecanum4_Config_t* config);
 void Mecanum4_ApplyVelocity(Mecanum4_t* chassis, float vx, float vy, float wz);
-void Mecanum4_Update(Mecanum4_t* chassis);
+void Mecanum4_Update(const Mecanum4_t* chassis);
 
 // forward kinematics solutions
 float Mecanum4Forward_GetYaw(const Mecanum4_t* chassis);
