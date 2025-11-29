@@ -16,8 +16,8 @@
 
 #include <stdbool.h>
 
-// #define CHASSIS_MECANUM4
-#define CHASSIS_OMNI4
+#define CHASSIS_MECANUM4
+// #define CHASSIS_OMNI4
 
 #ifdef CHASSIS_MECANUM4
 #    include "drivers/chassis_mecanum4.h"
@@ -30,7 +30,6 @@
 #    define ChassisDriver_t        Omni4_t
 #    define ChassisDriver_Config_t Omni4_Config_t
 #endif
-
 
 #if (defined(CHASSIS_MECANUM4) + defined(CHASSIS_OMNI4)) != 1
 #    error "There must be one and only one chassis type enabled at a time."
