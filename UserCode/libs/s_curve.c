@@ -182,6 +182,8 @@ SCurve_Result_t SCurve_Init(SCurve_t*   s,
         ts1 = as / jm;
         vs1 = vs - 0.5f * as * ts1;
     }
+    if (vp_min < 0)
+        vp_min = 0;
     // 实际需要使用的 len0
     const float len0 = len - dx0;
     {
