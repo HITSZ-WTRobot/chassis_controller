@@ -68,8 +68,8 @@ typedef struct
 
 typedef enum
 {
-    S_CURVE_FAILED = 0U,
-    S_CURVE_SUCCESS
+    S_CURVE_SUCCESS = 0U,
+    S_CURVE_FAILED,
 } SCurve_Result_t;
 
 SCurve_Result_t SCurve_Init(
