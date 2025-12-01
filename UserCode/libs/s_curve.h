@@ -1,0 +1,86 @@
+/**
+ * @file    s_curve.h
+ * @author  syhanjin
+ * @date    2025-11-29
+ * @brief   jerk 限制的 S 型速度规划（七段式）
+ *
+ * @attention 考虑到使用场景，本库只做初始状态 (xs, vs, as) 衔接，末状态为 (xe, 0, 0)
+ */
+#ifndef S_CURVE_H
+#define S_CURVE_H
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#include <stdbool.h>
+
+typedef struct
+{
+    bool  has_uniform;
+    float vs;
+    float jm;
+
+    float total_time;
+    float total_distance;
+
+    float t1; ///< 加加速段与匀加速段时刻分界
+    float x1; ///< 加加速段与匀加速段距离分界
+    float v1; ///< 加加速段与匀加速段速度分界
+    float t2; ///< 匀加速段与减加速段时刻分界
+    float x2; ///< 匀加速段与减加速段距离分界
+    float v2; ///< 匀加速段与减加速段速度分界
+
+    float ap;
+    float vp;
+} SCurveAccel_t;
+
+typedef struct
+{
+    bool  has_const; ///< 是否有匀速段
+    float direction; ///< 运行方向
+    float vp;        ///< 最大速度
+    float vs;        ///< 初始速度
+    float as;        ///< 初始加速度
+    float jm;        ///< 最大加加速度
+
+    // 可能的加速度刹车过程
+    float t0;
+    float x0;
+
+    float xs; ///< 初始位置
+    float x1; ///< 加速与匀速过程位置分界
+    float x2; ///< 匀速与减速过程位置分界
+    float xe; ///< 末位置
+
+    SCurveAccel_t process1;
+    float         ts1; ///< 第一段非对称过程的时间偏移
+    float         xs1; ///< 第一段非对称过程的起始位置
+    float         t1;  ///< 加速与匀速过程时刻分界
+
+    float t2; ///< 匀速与减速过程时刻分界
+
+    SCurveAccel_t process3;
+
+    float total_time;
+} SCurve_t;
+
+typedef enum
+{
+    S_CURVE_FAILED = 0U,
+    S_CURVE_SUCCESS
+} SCurve_Result_t;
+
+SCurve_Result_t SCurve_Init(
+        SCurve_t* s, float xs, float xe, float vs, float as, float vm, float am, float jm);
+
+float SCurve_CalcX(const SCurve_t* s, float t);
+float SCurve_CalcV(const SCurve_t* s, float t);
+float SCurve_CalcA(const SCurve_t* s, float t);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // S_CURVE_H
