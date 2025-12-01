@@ -32,15 +32,13 @@ extern "C"
 void PD_Calculate(PD_t* pd)
 {
     pd->cur_error = pd->ref - pd->fdb;
-    pd->output += pd->Kp * (pd->cur_error - pd->prev_error1) +
-                  pd->Kd * (pd->cur_error - 2 * pd->prev_error1 + pd->prev_error2);
+    pd->output    = pd->Kp * pd->cur_error + pd->Kd * (pd->cur_error - pd->prev_error);
     if (pd->output > pd->abs_output_max)
         pd->output = pd->abs_output_max;
     if (pd->output < -pd->abs_output_max)
         pd->output = -pd->abs_output_max;
 
-    pd->prev_error2 = pd->prev_error1;
-    pd->prev_error1 = pd->cur_error;
+    pd->prev_error = pd->cur_error;
 }
 
 void PD_Init(PD_t* pd, const PD_Config_t* config)

@@ -40,11 +40,10 @@ typedef struct
     float abs_output_max; //< 输出限幅
 
     /* Runtime Data */
-    float fdb;         //< 反馈量
-    float cur_error;   //< 当前误差
-    float prev_error1; //< 上一次误差
-    float prev_error2; //< 上上次误差
-    float output;      //< 输出量
+    float fdb;        //< 反馈量
+    float cur_error;  //< 当前误差
+    float prev_error; //< 上一次误差
+    float output;     //< 输出量
 
     /**
      * 本人认为 target 表意更合适，但是战队传承的代码使用的是 ref
