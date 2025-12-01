@@ -126,6 +126,7 @@ void Chassis_BodyPosture2WorldPosture(const Chassis_t*         chassis,
 /**
  * 底盘初始化
  *
+ * @attention config 对象不要在栈上初始化，可能会存在随机值，导致野指针
  * @note 初始化之后会自动保持静止
  * @param chassis 底盘
  * @param config 配置
@@ -145,10 +146,12 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
     chassis->last_feedback.sy  = 0;
     chassis->last_feedback.yaw = 0;
 
+    chassis->chassis_update_interval = config->chassis_update_interval * 1e-3f; // ms -> s
+
     // 初始化位置 PD 控制器
-    PD_Init(&chassis->posture.pd.vx, &config->posture.pd.vx);
-    PD_Init(&chassis->posture.pd.vy, &config->posture.pd.vy);
-    PD_Init(&chassis->posture.pd.wz, &config->posture.pd.wz);
+    PD_Init(&chassis->posture.trajectory.pd.vx, &config->posture.error_pd.vx);
+    PD_Init(&chassis->posture.trajectory.pd.vy, &config->posture.error_pd.vy);
+    PD_Init(&chassis->posture.trajectory.pd.wz, &config->posture.error_pd.wz);
 
     chassis->ctrl_mode = CHASSIS_VEL;
     ChassisDriver_ApplyVelocity(&chassis->driver, 0, 0, 0);
@@ -213,40 +216,47 @@ static void update_chassis_velocity_control(Chassis_t* chassis)
 
 void update_chassis_position_control(Chassis_t* chassis)
 {
-    // 计算与目标的相对位置
-    Chassis_Posture_t relative_posture;
-    Chassis_WorldPosture2BodyPosture(chassis, &chassis->posture.target.posture, &relative_posture);
-    // 计算速度
-    chassis->posture.pd.vx.ref = relative_posture.x;
-    chassis->posture.pd.vy.ref = relative_posture.y;
-    chassis->posture.pd.wz.ref = relative_posture.yaw;
-    chassis->posture.pd.vx.fdb = 0;
-    chassis->posture.pd.vy.fdb = 0;
-    chassis->posture.pd.wz.fdb = 0;
-    PD_Calculate(&chassis->posture.pd.vx);
-    PD_Calculate(&chassis->posture.pd.vy);
-    PD_Calculate(&chassis->posture.pd.wz);
-    Chassis_Velocity_t body_velocity = { .vx = chassis->posture.pd.vx.output,
-                                         .vy = chassis->posture.pd.vy.output,
-                                         .wz = chassis->posture.pd.wz.output };
+    const float now = chassis->posture.trajectory.now + chassis->chassis_update_interval;
+    chassis->posture.trajectory.now = now;
 
-    const float speed = sqrtf(body_velocity.vx * body_velocity.vx +
-                              body_velocity.vy * body_velocity.vy);
-    if (speed > chassis->posture.target.speed)
-    {
-        const float ratio = chassis->posture.target.speed / speed;
-        body_velocity.vx *= ratio;
-        body_velocity.vy *= ratio;
-    }
-    // PD 控制器里已经设置输出最大值，这里不再做额外计算
-    // if (fabsf(body_velocity.wz) > chassis->posture.target.omega)
-    // {
-    //     const float ratio = chassis->posture.target.omega / fabsf(body_velocity.wz);
-    //     body_velocity.wz *= ratio;
-    // }
-    chassis->velocity.in_body.vx = body_velocity.vx;
-    chassis->velocity.in_body.vy = body_velocity.vy;
-    chassis->velocity.in_body.wz = body_velocity.wz;
+    // 计算前馈速度
+    const Chassis_Velocity_t ff_velocity = {
+        .vx = SCurve_CalcV(&chassis->posture.trajectory.curve.x, now),
+        .vy = SCurve_CalcV(&chassis->posture.trajectory.curve.y, now),
+        .wz = SCurve_CalcV(&chassis->posture.trajectory.curve.yaw, now)
+    };
+
+    // 计算当前目标
+    const Chassis_Posture_t target_now = {
+        .x   = SCurve_CalcX(&chassis->posture.trajectory.curve.x, now),
+        .y   = SCurve_CalcX(&chassis->posture.trajectory.curve.y, now),
+        .yaw = SCurve_CalcX(&chassis->posture.trajectory.curve.yaw, now)
+    };
+
+    // 使用 pd 控制器跟随当前目标
+    chassis->posture.trajectory.pd.vx.ref = target_now.x;
+    chassis->posture.trajectory.pd.vx.fdb = chassis->posture.in_world.x;
+    PD_Calculate(&chassis->posture.trajectory.pd.vx);
+
+    chassis->posture.trajectory.pd.vy.ref = target_now.y;
+    chassis->posture.trajectory.pd.vy.fdb = chassis->posture.in_world.y;
+    PD_Calculate(&chassis->posture.trajectory.pd.vy);
+
+    chassis->posture.trajectory.pd.wz.ref = target_now.yaw;
+    chassis->posture.trajectory.pd.wz.fdb = chassis->posture.in_world.yaw;
+    PD_Calculate(&chassis->posture.trajectory.pd.wz);
+
+    // 叠加前馈和 pd 输出
+    const Chassis_Velocity_t velocity_in_world = {
+        ff_velocity.vx + chassis->posture.trajectory.pd.vx.output,
+        ff_velocity.vy + chassis->posture.trajectory.pd.vy.output,
+        ff_velocity.wz + chassis->posture.trajectory.pd.wz.output,
+    };
+
+    // 将世界坐标系速度转换为底盘坐标系速度
+    Chassis_Velocity_t body_velocity;
+    Chassis_WorldVelocity2BodyVelocity(chassis, &velocity_in_world, &body_velocity);
+    // 应用速度
     ChassisDriver_ApplyVelocity(&chassis->driver,
                                 body_velocity.vx,
                                 body_velocity.vy,
@@ -268,36 +278,78 @@ void Chassis_Update(Chassis_t* chassis)
  * 相对于世界坐标系设置目标位姿
  * @param chassis 底盘
  * @param absolute_target 绝对目标位姿
+ * @return 生成移动曲线的结果
  */
-void Chassis_SetTargetPostureInWorld(Chassis_t*                     chassis,
-                                     const Chassis_PostureTarget_t* absolute_target)
+SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     chassis,
+                                                const Chassis_PostureTarget_t* absolute_target)
 {
     osMutexAcquire(chassis->lock, osWaitForever);
 
+    // copy 当前位置和速度
+    const Chassis_Posture_t  start    = chassis->posture.in_world;
+    const Chassis_Velocity_t velocity = chassis->velocity.in_world;
+
+    SCurve_t curve_x, curve_y, curve_yaw;
+    float    ax = 0, ay = 0, ayaw = 0;
+    if (chassis->ctrl_mode == CHASSIS_POS)
+    {
+        ax   = SCurve_CalcA(&chassis->posture.trajectory.curve.x, chassis->posture.trajectory.now);
+        ay   = SCurve_CalcA(&chassis->posture.trajectory.curve.y, chassis->posture.trajectory.now);
+        ayaw = SCurve_CalcA(&chassis->posture.trajectory.curve.yaw,
+                            chassis->posture.trajectory.now);
+    }
+    // 初始化 S 型曲线
+    // 衔接当前位置，速度，如果之前是位置控制还会衔接加速度
+    const SCurve_Result_t res_x   = SCurve_Init(&curve_x,
+                                              start.x,
+                                              velocity.vx,
+                                              absolute_target->posture.x,
+                                              ax,
+                                              absolute_target->limit_x.max_spd,
+                                              absolute_target->limit_x.max_acc,
+                                              absolute_target->limit_x.max_jerk);
+    const SCurve_Result_t res_y   = SCurve_Init(&curve_y,
+                                              start.y,
+                                              velocity.vy,
+                                              absolute_target->posture.y,
+                                              ay,
+                                              absolute_target->limit_y.max_spd,
+                                              absolute_target->limit_y.max_acc,
+                                              absolute_target->limit_y.max_jerk);
+    const SCurve_Result_t res_yaw = SCurve_Init(&curve_yaw,
+                                                start.yaw,
+                                                velocity.wz,
+                                                absolute_target->posture.yaw,
+                                                ayaw,
+                                                absolute_target->limit_yaw.max_spd,
+                                                absolute_target->limit_yaw.max_acc,
+                                                absolute_target->limit_yaw.max_jerk);
+
+    if (res_x == S_CURVE_FAILED || res_y == S_CURVE_FAILED || res_yaw == S_CURVE_FAILED)
+        return S_CURVE_FAILED;
+
     const uint32_t saved = isr_lock(); // 写入过程加中断锁
 
-    chassis->posture.target.posture.x     = absolute_target->posture.x;
-    chassis->posture.target.posture.y     = absolute_target->posture.y;
-    chassis->posture.target.posture.yaw   = absolute_target->posture.yaw;
-    chassis->posture.target.speed         = absolute_target->speed;
-    chassis->posture.target.omega         = absolute_target->omega;
-    chassis->ctrl_mode                    = CHASSIS_POS;
-    chassis->posture.pd.vx.abs_output_max = absolute_target->speed;
-    chassis->posture.pd.vy.abs_output_max = absolute_target->speed;
-    chassis->posture.pd.wz.abs_output_max = absolute_target->omega;
+    chassis->posture.trajectory.now = 0;
+
+    chassis->posture.trajectory.curve.x   = curve_x;
+    chassis->posture.trajectory.curve.y   = curve_y;
+    chassis->posture.trajectory.curve.yaw = curve_yaw;
 
     isr_unlock(saved);
 
     osMutexRelease(chassis->lock);
+    return S_CURVE_SUCCESS;
 }
 
 /**
  * 相对于机身坐标系设置目标位姿
  * @param chassis 底盘
  * @param relative_target 相对目标位姿
+ * @return 生成移动曲线的结果
  */
-void Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
-                                    const Chassis_PostureTarget_t* relative_target)
+SCurve_Result_t Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
+                                               const Chassis_PostureTarget_t* relative_target)
 {
     Chassis_PostureTarget_t absolute_target;
 
@@ -305,10 +357,7 @@ void Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
     Chassis_BodyPosture2WorldPosture(chassis, &relative_target->posture, &absolute_target.posture);
     osMutexRelease(chassis->lock);
 
-    absolute_target.speed = relative_target->speed;
-    absolute_target.omega = relative_target->omega;
-
-    Chassis_SetTargetPostureInWorld(chassis, &absolute_target);
+    return Chassis_SetTargetPostureInWorld(chassis, &absolute_target);
 }
 
 /**

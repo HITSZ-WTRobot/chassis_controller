@@ -13,6 +13,7 @@
 #define _USE_MATH_DEFINES
 #include "cmsis_os2.h"
 #include "libs/pid_pd.h"
+#include "libs/s_curve.h"
 
 #include <stdbool.h>
 
@@ -51,11 +52,19 @@ typedef struct
     float yaw; ///< 向上（逆时针）为正 (unit: deg)
 } Chassis_Posture_t;
 
+/**
+ * @attention 这里的 max_acc 组在实际执行情况下是基于 world frame 的
+ *            无论是传入相对位置还是绝对位置
+ */
 typedef struct
 {
-    Chassis_Posture_t posture;
-    float             speed;
-    float             omega;
+    Chassis_Posture_t posture; ///< 目标位姿
+    struct
+    {
+        float max_spd;  ///< 最大速度 (unit: m/s)
+        float max_acc;  ///< 最大加速度 (unit: m/s^2)
+        float max_jerk; ///< 最大加加速度 (unit: m/s^3)
+    } limit_x, limit_y, limit_yaw;
 } Chassis_PostureTarget_t;
 
 typedef enum
@@ -68,6 +77,8 @@ typedef struct
 {
     osMutexId_t lock;
 
+    float chassis_update_interval; ///< 底盘更新周期 (unit: s)
+
     volatile Chassis_CtrlMode_t ctrl_mode; ///< 控制模式
 
     struct
@@ -79,7 +90,6 @@ typedef struct
 
     struct
     {
-        Chassis_PostureTarget_t target; ///< 目标位置
         /**
          * feedback_yaw - world_yaw = body_yaw
          */
@@ -87,10 +97,22 @@ typedef struct
 
         struct
         {
-            PD_t vx; ///< x 速度 PD 控制器
-            PD_t vy; ///< y 速度 PD 控制器
-            PD_t wz; ///< 角速度 PD 控制器
-        } pd;
+            float now; ///< 当前执行时间
+
+            struct
+            {
+                PD_t vx; ///< x 速度 PD 控制器
+                PD_t vy; ///< y 速度 PD 控制器
+                PD_t wz; ///< 角速度 PD 控制器
+            } pd;
+
+            struct
+            {
+                SCurve_t x;
+                SCurve_t y;
+                SCurve_t yaw;
+            } curve;
+        } trajectory;
     } posture;
 
     struct
@@ -129,14 +151,19 @@ typedef struct
 {
     ChassisDriver_Config_t driver; ///< 底盘驱动配置
 
+    float chassis_update_interval; ///< 底盘更新间隔 (unit: ms)
+
     struct
     {
+        /**
+         * @attention 这组 PD 控制器是在前馈外额外叠加的误差控制器
+         */
         struct
         {
             PD_Config_t vx; ///< x 速度 PD 控制器
             PD_Config_t vy; ///< y 速度 PD 控制器
             PD_Config_t wz; ///< 角速度 PD 控制器
-        } pd;
+        } error_pd;
     } posture;
 
     /**
@@ -167,17 +194,17 @@ void Chassis_BodyVelocity2WorldVelocity(const Chassis_t*          chassis,
                                         const Chassis_Velocity_t* velocity_in_body,
                                         Chassis_Velocity_t*       velocity_in_world);
 
-void Chassis_SetVelWorldFrame(Chassis_t*                chassis,
-                              const Chassis_Velocity_t* world_velocity,
-                              const bool                target_in_world);
-void Chassis_SetVelBodyFrame(Chassis_t*                chassis,
-                             const Chassis_Velocity_t* body_velocity,
-                             const bool                target_in_world);
-void Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
-                                    const Chassis_PostureTarget_t* relative_target);
+void            Chassis_SetVelWorldFrame(Chassis_t*                chassis,
+                                         const Chassis_Velocity_t* world_velocity,
+                                         const bool                target_in_world);
+void            Chassis_SetVelBodyFrame(Chassis_t*                chassis,
+                                        const Chassis_Velocity_t* body_velocity,
+                                        const bool                target_in_world);
+SCurve_Result_t Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
+                                               const Chassis_PostureTarget_t* relative_target);
 
-void Chassis_SetTargetPostureInWorld(Chassis_t*                     chassis,
-                                     const Chassis_PostureTarget_t* absolute_target);
-void Chassis_SetWorldFromCurrent(Chassis_t* chassis);
+SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     chassis,
+                                                const Chassis_PostureTarget_t* absolute_target);
+void            Chassis_SetWorldFromCurrent(Chassis_t* chassis);
 
 #endif // CHASSIS_IF_H
