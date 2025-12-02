@@ -97,7 +97,8 @@ typedef struct
 
         struct
         {
-            float now; ///< 当前执行时间
+            float now;        ///< 当前执行时间
+            float total_time; ///< 总执行时间
 
             struct
             {
@@ -219,5 +220,11 @@ SCurve_Result_t Chassis_SetTargetPostureInBody(Chassis_t*                     ch
 SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     chassis,
                                                 const Chassis_PostureTarget_t* absolute_target);
 void            Chassis_SetWorldFromCurrent(Chassis_t* chassis);
+
+static bool Chassis_TrajectoryIsFinished(const Chassis_t* chassis)
+{
+    return chassis->ctrl_mode == CHASSIS_POS &&
+           chassis->posture.trajectory.now >= chassis->posture.trajectory.total_time;
+}
 
 #endif // CHASSIS_IF_H

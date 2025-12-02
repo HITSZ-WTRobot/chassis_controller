@@ -345,9 +345,14 @@ SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     c
     if (res_x == S_CURVE_FAILED || res_y == S_CURVE_FAILED || res_yaw == S_CURVE_FAILED)
         return S_CURVE_FAILED;
 
+    float total_time = curve_x.total_time > curve_y.total_time ? curve_x.total_time
+                                                               : curve_y.total_time;
+    total_time       = curve_yaw.total_time > total_time ? curve_yaw.total_time : total_time;
+
     const uint32_t saved = isr_lock(); // 写入过程加中断锁
 
-    chassis->posture.trajectory.now = 0;
+    chassis->posture.trajectory.now        = 0;
+    chassis->posture.trajectory.total_time = total_time;
 
     chassis->posture.trajectory.curve.x   = curve_x;
     chassis->posture.trajectory.curve.y   = curve_y;
