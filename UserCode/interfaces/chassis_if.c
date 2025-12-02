@@ -302,24 +302,24 @@ SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     c
     // 衔接当前位置，速度，如果之前是位置控制还会衔接加速度
     const SCurve_Result_t res_x   = SCurve_Init(&curve_x,
                                               start.x,
-                                              velocity.vx,
                                               absolute_target->posture.x,
+                                              velocity.vx,
                                               ax,
                                               absolute_target->limit_x.max_spd,
                                               absolute_target->limit_x.max_acc,
                                               absolute_target->limit_x.max_jerk);
     const SCurve_Result_t res_y   = SCurve_Init(&curve_y,
                                               start.y,
-                                              velocity.vy,
                                               absolute_target->posture.y,
+                                              velocity.vy,
                                               ay,
                                               absolute_target->limit_y.max_spd,
                                               absolute_target->limit_y.max_acc,
                                               absolute_target->limit_y.max_jerk);
     const SCurve_Result_t res_yaw = SCurve_Init(&curve_yaw,
                                                 start.yaw,
-                                                velocity.wz,
                                                 absolute_target->posture.yaw,
+                                                velocity.wz,
                                                 ayaw,
                                                 absolute_target->limit_yaw.max_spd,
                                                 absolute_target->limit_yaw.max_acc,
@@ -336,6 +336,8 @@ SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     c
     chassis->posture.trajectory.curve.y   = curve_y;
     chassis->posture.trajectory.curve.yaw = curve_yaw;
 
+    chassis->ctrl_mode = CHASSIS_POS;
+
     isr_unlock(saved);
 
     osMutexRelease(chassis->lock);
@@ -351,7 +353,7 @@ SCurve_Result_t Chassis_SetTargetPostureInWorld(Chassis_t*                     c
 SCurve_Result_t Chassis_SetTargetPostureInBody(Chassis_t*                     chassis,
                                                const Chassis_PostureTarget_t* relative_target)
 {
-    Chassis_PostureTarget_t absolute_target;
+    Chassis_PostureTarget_t absolute_target = *relative_target;
 
     osMutexAcquire(chassis->lock, osWaitForever);
     Chassis_BodyPosture2WorldPosture(chassis, &relative_target->posture, &absolute_target.posture);
@@ -386,7 +388,8 @@ void Chassis_SetVelWorldFrame(Chassis_t*                chassis,
     chassis->velocity.in_body.vx      = shadow_body_velocity.vx;
     chassis->velocity.in_body.vy      = shadow_body_velocity.vy;
     chassis->velocity.in_body.wz      = shadow_body_velocity.wz;
-    chassis->ctrl_mode                = CHASSIS_VEL;
+
+    chassis->ctrl_mode = CHASSIS_VEL;
 
     isr_unlock(saved);
 
@@ -419,7 +422,8 @@ void Chassis_SetVelBodyFrame(Chassis_t*                chassis,
     chassis->velocity.in_world.vx     = shadow_world_velocity.vx;
     chassis->velocity.in_world.vy     = shadow_world_velocity.vy;
     chassis->velocity.in_world.wz     = shadow_world_velocity.wz;
-    chassis->ctrl_mode                = CHASSIS_VEL;
+
+    chassis->ctrl_mode = CHASSIS_VEL;
 
     isr_unlock(saved);
     osMutexRelease(chassis->lock);
