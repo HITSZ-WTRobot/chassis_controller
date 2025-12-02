@@ -52,19 +52,19 @@ static inline DJI_t* getDJIHandle(DJI_t* motors[8], const CAN_RxHeaderTypeDef* h
     return motors[id0];
 }
 
-void DJI_Init(DJI_t* hdji, const DJI_Config_t dji_config)
+void DJI_Init(DJI_t* hdji, const DJI_Config_t* dji_config)
 {
     memset(hdji, 0, sizeof(DJI_t));
 
     hdji->enable             = true;
-    hdji->reverse            = dji_config.reverse;
-    hdji->auto_zero          = dji_config.auto_zero;
-    hdji->can                = dji_config.hcan->Instance;
-    hdji->id1                = dji_config.id1;
+    hdji->reverse            = dji_config->reverse;
+    hdji->auto_zero          = dji_config->auto_zero;
+    hdji->can                = dji_config->hcan->Instance;
+    hdji->id1                = dji_config->id1;
     hdji->inv_reduction_rate = 1.0f / // 取倒数将除法转为乘法加快运算速度
-                               ((dji_config.reduction_rate > 0 ? dji_config.reduction_rate
-                                                               : 1.0f)        // 外接减速比
-                                * reduction_rate_map[dji_config.motor_type]); // 电机内部减速比
+                               ((dji_config->reduction_rate > 0 ? dji_config->reduction_rate
+                                                                : 1.0f)        // 外接减速比
+                                * reduction_rate_map[dji_config->motor_type]); // 电机内部减速比
 
     /* 注册回调 */
     DJI_t** mapped_motors = NULL;
@@ -196,8 +196,7 @@ void DJI_CAN_FilterInit(CAN_HandleTypeDef* hcan, const uint32_t filter_bank)
  * @attention 必须*注册*回调函数或者在更高级的回调函数内调用此回调函数
  * @note 使用
  *          HAL_CAN_RegisterCallback(hcan, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID,
- *                                   DJI_CAN_Fifo0ReceiveCallback);
- *       来注册回调函数
+ * DJI_CAN_Fifo0ReceiveCallback); 来注册回调函数
  * @param hcan
  */
 void DJI_CAN_Fifo0ReceiveCallback(CAN_HandleTypeDef* hcan)

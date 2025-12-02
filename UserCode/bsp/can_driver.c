@@ -132,9 +132,9 @@ void CAN_Start(CAN_HandleTypeDef* hcan, const uint32_t ActiveITs)
  * @param filter_match_index 注册对应的 filter 编号
  * @param callback 回调函数指针
  */
-void CAN_RegisterCallback(CAN_HandleTypeDef*        hcan,
-                          const uint32_t            filter_match_index,
-                          CAN_FifoReceiveCallback_t callback)
+void CAN_RegisterCallback(CAN_HandleTypeDef*              hcan,
+                          const uint32_t                  filter_match_index,
+                          const CAN_FifoReceiveCallback_t callback)
 {
     CAN_FifoReceiveCallback_t* callbacks = get_callbacks(hcan);
 
