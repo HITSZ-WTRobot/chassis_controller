@@ -218,9 +218,16 @@ SCurve_Result_t SCurve_Init(SCurve_t*   s,
     // 由于代数表达式太过复杂，这里直接上二分查找
     float l = vp_min, r = vm;
     float delta_d = len0, dx1 = 0, dx3 = 0;
+
+#ifdef DEBUG
+    s->binary_search_count = 0;
+#endif
     // 最大迭代次数约 13 次
-    while (r - l > 0.001f)
+    while (r - vp_min > 0.001f)
     {
+#ifdef DEBUG
+        s->binary_search_count++;
+#endif
         const float mid = 0.5f * (l + r);
         SCurveAccel_Init(&s->process1, vs1, mid, am, jm);
         SCurveAccel_Init(&s->process3, 0, mid, am, jm);
@@ -228,7 +235,7 @@ SCurve_Result_t SCurve_Init(SCurve_t*   s,
         dx1     = s->process1.total_distance - SCurveAccel_GetDistance(&s->process1, ts1);
         dx3     = s->process3.total_distance;
         delta_d = dx1 + dx3 - len0;
-        if (delta_d < 0.001 && delta_d > -0.001)
+        if (delta_d < S_CURVE_MAX_BS_ERROR && delta_d > -S_CURVE_MAX_BS_ERROR)
         {
             r = l = mid;
             break;
@@ -238,7 +245,7 @@ SCurve_Result_t SCurve_Init(SCurve_t*   s,
         else
             l = mid;
     }
-    if (delta_d > 0.001)
+    if (delta_d > S_CURVE_MAX_BS_ERROR)
     {
         // 即使 vp 降到最低也无法找到解
         return S_CURVE_FAILED;

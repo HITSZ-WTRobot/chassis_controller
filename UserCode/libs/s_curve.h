@@ -15,10 +15,20 @@ extern "C"
 #endif
 
 #include <stdbool.h>
+#include "main.h"
 
+// 最大二分查找误差
+#ifndef S_CURVE_MAX_BS_ERROR
+#    define S_CURVE_MAX_BS_ERROR (0.001f)
+#endif
+
+/**
+ * @brief 曲线加速过程
+ * 带有 am jm 限制的曲线加速过程，初末加速度均为零
+ */
 typedef struct
 {
-    bool  has_uniform;
+    bool  has_uniform; ///< 是否有匀加速段
     float vs;
     float jm;
 
@@ -64,6 +74,10 @@ typedef struct
     SCurveAccel_t process3;
 
     float total_time;
+
+#ifdef DEBUG
+    uint32_t binary_search_count;
+#endif
 } SCurve_t;
 
 typedef enum
