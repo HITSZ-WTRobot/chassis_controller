@@ -42,6 +42,12 @@ static void isr_unlock(uint32_t primask)
     __set_PRIMASK(primask);
 }
 
+static bool is_ops_enable(const Chassis_t* chassis)
+{
+    return chassis->feedback.x != NULL && chassis->feedback.y != NULL &&
+           chassis->feedback.yaw != NULL;
+}
+
 /**
  * 将世界坐标系下的速度变换为车身坐标系下的速度
  *
@@ -158,27 +164,38 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
 
 static void update_chassis_posture(Chassis_t* chassis)
 {
-    const float sx  = chassis->feedback.sx != NULL ? *chassis->feedback.sx
-                                                   : ChassisForward_GetX(&chassis->driver);
-    const float sy  = chassis->feedback.sy != NULL ? *chassis->feedback.sy
-                                                   : ChassisForward_GetY(&chassis->driver);
-    const float yaw = chassis->feedback.yaw != NULL ? *chassis->feedback.yaw
-                                                    : ChassisForward_GetYaw(&chassis->driver);
+    if (is_ops_enable(chassis))
+    {
+        // 直接读取 OPS
+        chassis->posture.in_world.x   = *chassis->feedback.x;
+        chassis->posture.in_world.y   = *chassis->feedback.y;
+        chassis->posture.in_world.yaw = *chassis->feedback.yaw;
+    }
+    else
+    {
+        // 通过里程计或者运动学解算计算位置
+        const float sx  = chassis->feedback.sx != NULL ? *chassis->feedback.sx
+                                                       : ChassisForward_GetX(&chassis->driver);
+        const float sy  = chassis->feedback.sy != NULL ? *chassis->feedback.sy
+                                                       : ChassisForward_GetY(&chassis->driver);
+        const float yaw = chassis->feedback.yaw != NULL ? *chassis->feedback.yaw
+                                                        : ChassisForward_GetYaw(&chassis->driver);
 
-    const float dx               = sx - chassis->last_feedback.sx;
-    const float dy               = sy - chassis->last_feedback.sy;
-    const float ave_yaw          = (yaw + chassis->last_feedback.yaw) * 0.5f;
-    const float ave_yaw_in_world = ave_yaw - chassis->world.posture.yaw;
+        const float dx               = sx - chassis->last_feedback.sx;
+        const float dy               = sy - chassis->last_feedback.sy;
+        const float ave_yaw          = (yaw + chassis->last_feedback.yaw) * 0.5f;
+        const float ave_yaw_in_world = ave_yaw - chassis->world.posture.yaw;
 
-    chassis->last_feedback.sx  = sx;
-    chassis->last_feedback.sy  = sy;
-    chassis->last_feedback.yaw = yaw;
+        chassis->last_feedback.sx  = sx;
+        chassis->last_feedback.sy  = sy;
+        chassis->last_feedback.yaw = yaw;
 
-    chassis->posture.in_world.x += dx * cosf(DEG2RAD(ave_yaw_in_world)) -
-                                   dy * sinf(DEG2RAD(ave_yaw_in_world));
-    chassis->posture.in_world.y += dx * sinf(DEG2RAD(ave_yaw_in_world)) +
-                                   dy * cosf(DEG2RAD(ave_yaw_in_world));
-    chassis->posture.in_world.yaw = yaw - chassis->world.posture.yaw;
+        chassis->posture.in_world.x += dx * cosf(DEG2RAD(ave_yaw_in_world)) -
+                                       dy * sinf(DEG2RAD(ave_yaw_in_world));
+        chassis->posture.in_world.y += dx * sinf(DEG2RAD(ave_yaw_in_world)) +
+                                       dy * cosf(DEG2RAD(ave_yaw_in_world));
+        chassis->posture.in_world.yaw = yaw - chassis->world.posture.yaw;
+    }
 }
 
 static void update_chassis_velocity_control(Chassis_t* chassis)
@@ -382,6 +399,10 @@ void Chassis_SetVelBodyFrame(Chassis_t*                chassis,
  */
 void Chassis_SetWorldFromCurrent(Chassis_t* chassis)
 {
+    // 启用 OPS 的情况下 world 由 OPS 管理
+    if (is_ops_enable(chassis))
+        return;
+
     osMutexAcquire(chassis->lock, osWaitForever);
 
     const uint32_t saved = isr_lock(); // 写入过程加中断锁

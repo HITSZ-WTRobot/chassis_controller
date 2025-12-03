@@ -112,8 +112,12 @@ typedef struct
         volatile float* vy; ///< 指向车体左侧 (unit: m/s)
         volatile float* wz; ///< 车体角速度 (unit: deg/s)
 
-        volatile float* sx;  ///< x 方向里程计读数 (unit: m)
-        volatile float* sy;  ///< y 方向里程计读数 (unit: m)
+        volatile float* sx; ///< x 方向里程计读数 (unit: m)
+        volatile float* sy; ///< y 方向里程计读数 (unit: m)
+
+        volatile float* x; ///< x 方向位置 (unit: m)
+        volatile float* y; ///< y 方向位置 (unit: m)
+
         volatile float* yaw; ///< 车体角度 (unit: deg)
     } feedback;
 
@@ -146,13 +150,22 @@ typedef struct
      */
     struct
     {
-        // 相对于车体
+        // 相对于车体，该数据一般来源于 IMU
         float* vx; ///< 指向车体前方 (unit: m/s)
         float* vy; ///< 指向车体左侧 (unit: m/s)
         float* wz; ///< 车体角速度 (unit: deg/s)
 
-        float* sx;  ///< x 方向里程计读数 (unit: m)
-        float* sy;  ///< y 方向里程计读数 (unit: m)
+        // 该数据一般来源于里程计，因为是计算增量，所以没有相对一说
+        float* sx; ///< x 方向里程计读数 (unit: m)
+        float* sy; ///< y 方向里程计读数 (unit: m)
+
+        // 该数据一般来源于全向定位平台（OPS），相对于 OPS World。这组数据的优先级高于 sx, sy
+        // 如果要使用 OPS，世界坐标系的位置由 OPS 管理，机体不再执行换算。
+        // 此时 Chassis_SetWorldFromCurrent 将不起作用
+        // 当 x, y, yaw 都不为 NULL 时，启用 OPS，请保证三个量都来自 OPS
+        float* x; ///< x 方向位置 (unit: m)
+        float* y; ///< y 方向位置 (unit: m)
+        // 该数据一般来源于陀螺仪，底盘不需要管相对于谁
         float* yaw; ///< 车体角度 (unit: deg)
     } feedback_source;
 } Chassis_Config_t;
