@@ -53,8 +53,9 @@ typedef struct
 } Chassis_Posture_t;
 
 /**
- * @attention 这里的 max_acc 组在实际执行情况下是基于 world frame 的
- *            无论是传入相对位置还是绝对位置
+ * @attention 这里的 max_acc 组在实际执行情况下是基于 world frame 的，
+ *            无论是传入相对位置还是绝对位置。实测发现在同时设置平移和旋转
+ *            目标时很容易打滑，建议使用较低限制或者让平移和旋转先后执行
  */
 typedef struct
 {
