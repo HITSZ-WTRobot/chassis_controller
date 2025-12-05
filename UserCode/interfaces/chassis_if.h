@@ -25,7 +25,7 @@
 #ifndef CHASSIS_IF_H
 #define CHASSIS_IF_H
 
-#define __CHASSIS_IF_VERSION__ "0.0.1"
+#define __CHASSIS_IF_VERSION__ "1.0.0"
 #define _USE_MATH_DEFINES
 #include "cmsis_os2.h"
 #include "libs/pid_pd.h"
