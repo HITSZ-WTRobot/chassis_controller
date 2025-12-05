@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Project repository: https://github.com/HITSZ-WTR2026/motor_drivers
+ * Project repository: https://github.com/HITSZ-WTRobot/motor_drivers
  */
 #include "pid_motor.h"
 #include <string.h>

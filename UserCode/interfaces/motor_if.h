@@ -8,7 +8,7 @@
  *   - drivers/DJI.h: 大疆电机
  *   - drivers/tb6612.h: 由 TB6612 芯片驱动的直流电机
  *   - drivers/vesc.h: VESC 电调驱动的电机
- *
+ *   - drivers/DM.h: 达妙电机
  *
  * --------------------------------------------------------------------------
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Project repository: https://github.com/HITSZ-WTR2026/motor_drivers
+ * Project repository: https://github.com/HITSZ-WTRobot/motor_drivers
  *
  *
  */
