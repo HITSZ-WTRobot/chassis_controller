@@ -27,7 +27,6 @@ typedef struct
 {
     float            wheel_radius; ///< 轮子半径 (unit: m)
     float            half_diag;    ///< 轮子到中心的半对角线距离 (unit: m)
-    double           angle;
     Motor_VelCtrl_t* wheel[OMNI4_WHEEL_MAX];
 } Omni4_t;
 
