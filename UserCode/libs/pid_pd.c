@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Project repository: https://github.com/HITSZ-WTR2026/chassises_controller
+ * Project repository: https://github.com/HITSZ-WTRobot/chassises_controller
  */
 #include "pid_pd.h"
 #include <string.h>
