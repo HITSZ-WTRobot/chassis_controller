@@ -26,6 +26,11 @@
 #include "interfaces/motor_if.h"
 #include <math.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #define RPS2RPM(__RPS__) ((__RPS__) * 60.0f / (2 * 3.14159265358979323846f))
 #define DEG2RAD(__DEG__) ((__DEG__) * (float) 3.14159265358979323846f / 180.0f)
 #define RAD2DEG(__RAD__) ((__RAD__) * 180.0f / (float) 3.14159265358979323846f)
@@ -65,5 +70,9 @@ void Omni4_Update(const Omni4_t* chassis);
 float Omni4Forward_GetYaw(const Omni4_t* chassis);
 float Omni4Forward_GetX(const Omni4_t* chassis);
 float Omni4Forward_GetY(const Omni4_t* chassis);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CHASSIS_OMNI4_H

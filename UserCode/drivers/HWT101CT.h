@@ -8,6 +8,11 @@
 #define HWT101CT_H
 #include "main.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #define HWT101CT_HEAD    (0x55)
 #define HWT101CT_CMD_LEN (11U)
 
@@ -79,5 +84,9 @@ void HWT101CT_RxCallback(HWT101CT_t* hwt101ct);
 void HWT101CT_ResetYaw(HWT101CT_t* hwt101ct);
 void HWT101CT_Calibrate(const HWT101CT_t* hwt101ct, uint32_t duration_ms);
 void HWT101CT_SetOutputRate(const HWT101CT_t* hwt101ct, HWT101CT_RRate_t rate);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // HWT101CT_H

@@ -8,6 +8,11 @@
 #    include "cmsis_os2.h"
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 // TODO: 把这个东西放到合适的地方安放
 static void delay_us(const uint32_t us)
 {
@@ -177,3 +182,7 @@ void HWT101CT_SetOutputRate(const HWT101CT_t* hwt101ct, const HWT101CT_RRate_t r
 {
     write_reg(hwt101ct, 0x03, rate, 0x00);
 }
+
+#ifdef __cplusplus
+}
+#endif
