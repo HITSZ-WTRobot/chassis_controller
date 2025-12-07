@@ -23,6 +23,11 @@
 #include "chassis_omni4.h"
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * 初始化四全向轮底盘
  * @param chassis 底盘实例
@@ -142,3 +147,7 @@ float Omni4Forward_GetY(const Omni4_t* chassis)
     return chassis->wheel_radius / 4 * sqrtf(2) *
            DEG2RAD(angle_fr + angle_fl - angle_rl - angle_rr);
 }
+
+#ifdef __cplusplus
+}
+#endif

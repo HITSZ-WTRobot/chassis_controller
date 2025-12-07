@@ -22,6 +22,11 @@
 #include "chassis_mecanum4.h"
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * 初始化四轮麦轮底盘
  *
@@ -189,3 +194,7 @@ float Mecanum4Forward_GetY(const Mecanum4_t* chassis)
 
     return 0;
 }
+
+#ifdef __cplusplus
+}
+#endif

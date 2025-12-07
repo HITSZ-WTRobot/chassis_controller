@@ -31,6 +31,12 @@
 #include "interfaces/motor_if.h"
 
 #include <math.h>
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
  * rad/s to round/min
  * @param __RPS__ rad/s
@@ -89,5 +95,9 @@ void Mecanum4_Update(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetYaw(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetX(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetY(const Mecanum4_t* chassis);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // CHASSIS_MECANUM4_H
