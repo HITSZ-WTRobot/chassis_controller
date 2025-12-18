@@ -1,8 +1,4 @@
 # generated on 2025-11-08 18:01:38
-### Auto-generated files ###
-# auto-generated files by ide
-# section: clion
-CMakeLists.txt
 
 ### Build artifacts ###
 # CMake build outputs, object files, binaries
@@ -24,9 +20,6 @@ Release/
 # section: keil
 *.uvprojx
 *.uvoptx
-# section: eide
-.eide*
-!.eide/
 # section: iar
 *.eww
 *.ewd
