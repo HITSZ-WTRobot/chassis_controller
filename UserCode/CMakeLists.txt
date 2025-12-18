@@ -33,22 +33,22 @@ set(ALL_HEADERS "interfaces/chassis_if.h")
 # ---------------------------------------------------------------------------
 set(DRIVER_MACROS "")
 
-set(CHASSIS_TYPE "" CACHE STRING "select chassis type (required)")
-set_property(CACHE CHASSIS_TYPE PROPERTY STRINGS
+set(ChassisIF_ChassisType "" CACHE STRING "select chassis type (required)")
+set_property(CACHE ChassisIF_ChassisType PROPERTY STRINGS
         MECANUM4
         OMNI4
 )
 
-if (CHASSIS_TYPE STREQUAL "MECANUM4")
+if (ChassisIF_ChassisType STREQUAL "MECANUM4")
     list(APPEND ALL_SOURCES drivers/chassis_mecanum4.c)
     list(APPEND ALL_HEADERS "drivers/chassis_mecanum4.h")
     list(APPEND DRIVER_MACROS CHASSIS_MECANUM4)
-elseif (CHASSIS_TYPE STREQUAL "OMNI4")
+elseif (ChassisIF_ChassisType STREQUAL "OMNI4")
     list(APPEND ALL_SOURCES drivers/chassis_omni4.c)
     list(APPEND ALL_HEADERS "drivers/chassis_omni4.h")
     list(APPEND DRIVER_MACROS CHASSIS_OMNI)
 else ()
-    message(FATAL_ERROR "invalid CHASSIS_TYPE: ${CHASSIS_TYPE}")
+    message(FATAL_ERROR "invalid ChassisIF_ChassisType: ${ChassisIF_ChassisType}")
 endif ()
 
 # ---------------------------------------------------------------------------
