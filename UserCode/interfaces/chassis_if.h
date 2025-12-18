@@ -33,7 +33,7 @@
 
 #include <stdbool.h>
 
-#define CHASSIS_MECANUM4
+// #define CHASSIS_MECANUM4
 // #define CHASSIS_OMNI4
 
 #ifdef CHASSIS_MECANUM4
