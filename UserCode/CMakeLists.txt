@@ -1,10 +1,10 @@
 # UserCode/CMakeLists.txt
 cmake_minimum_required(VERSION 3.21)
-project(<name>)
+project(chassis_controller)
 
 # 导库方式
 # add_subdirectory({project_path}/UserCode)
-# target_link_libraries(${PROJECT_NAME}.elf PRIVATE <name>)
+# target_link_libraries(${PROJECT_NAME}.elf PRIVATE chassis_controller)
 
 # ---------------------------------------------------------------------------
 # guard: UserCode should only be included by parent project
