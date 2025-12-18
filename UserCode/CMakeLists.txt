@@ -92,4 +92,11 @@ endforeach ()
 add_dependencies(${PROJECT_NAME} stm32cubemx)
 
 # Repo: https://github.com/HITSZ-WTRobot/motor_drivers
+target_link_libraries(${PROJECT_NAME} PRIVATE motor_drivers)
 add_dependencies(${PROJECT_NAME} motor_drivers)
+
+# Repo: https://github.com/HITSZ-WTRobot/s-curve-planner
+target_link_libraries(${PROJECT_NAME} PRIVATE s_curve)
+add_dependencies(${PROJECT_NAME} s_curve)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE m)
