@@ -77,6 +77,18 @@ set(USER_LIBRARIES "")
 # e.g.
 #add_subdirectory(library/motor_drivers/UserCode)
 
+# motor_drivers
+# Repo: https://github.com/HITSZ-WTRobot/motor_drivers
+set(ENABLE_BSP ON) # 启用 bsp
+set(ENABLE_LIBS ON) # 启用 lib
+set(ENABLE_CONTROLLERS ON) # 启用 controller
+
+set(ENABLE_DJI_DRIVER ON)
+set(ENABLE_TB6612_DRIVER OFF)
+set(ENABLE_VESC_DRIVER OFF)
+set(ENABLE_DM_DRIVER OFF)
+add_subdirectory(Modules/motor_drivers/UserCode)
+list(APPEND USER_LIBRARIES motor_drivers)
 
 # =======================================================
 
