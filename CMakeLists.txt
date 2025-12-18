@@ -90,6 +90,9 @@ set(ENABLE_DM_DRIVER OFF)
 add_subdirectory(Modules/motor_drivers/UserCode)
 list(APPEND USER_LIBRARIES motor_drivers)
 
+add_subdirectory(Modules/HWT101CT_driver/UserCode)
+list(APPEND USER_LIBRARIES HWT101CT)
+
 # =======================================================
 
 # every library will depend on stm32cubemx
