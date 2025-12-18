@@ -89,4 +89,5 @@ endforeach ()
 # ---------------------------------------------------------------------------
 # declare dependencies
 # ---------------------------------------------------------------------------
-add_dependencies(stm32cubemx motor_drivers)
+add_dependencies(${PROJECT_NAME} stm32cubemx)
+add_dependencies(${PROJECT_NAME} motor_drivers)
