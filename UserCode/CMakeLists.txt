@@ -90,4 +90,6 @@ endforeach ()
 # declare dependencies
 # ---------------------------------------------------------------------------
 add_dependencies(${PROJECT_NAME} stm32cubemx)
+
+# Repo: https://github.com/HITSZ-WTRobot/motor_drivers
 add_dependencies(${PROJECT_NAME} motor_drivers)
