@@ -1,6 +1,9 @@
 # UserCode/CMakeLists.txt
 cmake_minimum_required(VERSION 3.21)
-project(chassis_controller)
+
+set(LIB_NAME chassis_controller)
+
+project(${LIB_NAME})
 
 # 导库方式
 # add_subdirectory({project_path}/UserCode)
@@ -24,16 +27,6 @@ endif ()
 set(ALL_SOURCES interfaces/chassis_if.c)
 
 set(ALL_HEADERS "interfaces/chassis_if.h")
-
-#if (ENABLE_BSP)
-#    file(GLOB_RECURSE BSP_SOURCES bsp/*.c)
-#    list(APPEND ALL_SOURCES ${BSP_SOURCES})
-#    list(APPEND ALL_HEADERS
-#            "bsp/can_driver.h"
-#            "bsp/gpio_driver.h"
-#            "bsp/pwm.h"
-#    )
-#endif ()
 
 # ---------------------------------------------------------------------------
 # feature options: option + source + macro
@@ -61,13 +54,16 @@ endif ()
 # ---------------------------------------------------------------------------
 # create static library
 # ---------------------------------------------------------------------------
-add_library(${PROJECT_NAME} STATIC ${ALL_SOURCES})
+add_library(chassis_controller STATIC ${ALL_SOURCES})
+if (NOT TARGET ${LIB_NAME})
+    message(FATAL_ERROR "target ${LIB_NAME} not created")
+endif ()
 
 # ---------------------------------------------------------------------------
 # compile definitions
 # ---------------------------------------------------------------------------
 if (DRIVER_MACROS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ${DRIVER_MACROS})
+    target_compile_definitions(${LIB_NAME} PUBLIC ${DRIVER_MACROS})
 endif ()
 
 # ---------------------------------------------------------------------------
@@ -75,7 +71,7 @@ endif ()
 # ---------------------------------------------------------------------------
 set(EXPORT_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(MAKE_DIRECTORY ${EXPORT_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC ${EXPORT_INCLUDE_DIR})
+target_include_directories(${LIB_NAME} PUBLIC ${EXPORT_INCLUDE_DIR})
 
 # ---------------------------------------------------------------------------
 # copy selected headers
@@ -89,15 +85,15 @@ endforeach ()
 # ---------------------------------------------------------------------------
 # declare dependencies
 # ---------------------------------------------------------------------------
-target_link_libraries(${PROJECT_NAME} PRIVATE stm32cubemx)
-add_dependencies(${PROJECT_NAME} stm32cubemx)
+target_link_libraries(${LIB_NAME} PRIVATE stm32cubemx)
+add_dependencies(${LIB_NAME} stm32cubemx)
 
 # Repo: https://github.com/HITSZ-WTRobot/motor_drivers
-target_link_libraries(${PROJECT_NAME} PRIVATE motor_drivers)
-add_dependencies(${PROJECT_NAME} motor_drivers)
+target_link_libraries(${LIB_NAME} PRIVATE motor_drivers)
+add_dependencies(${LIB_NAME} motor_drivers)
 
 # Repo: https://github.com/HITSZ-WTRobot/s-curve-planner
-target_link_libraries(${PROJECT_NAME} PRIVATE s_curve)
-add_dependencies(${PROJECT_NAME} s_curve)
+target_link_libraries(${LIB_NAME} PRIVATE s_curve)
+add_dependencies(${LIB_NAME} s_curve)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE m)
+target_link_libraries(${LIB_NAME} PRIVATE m)
