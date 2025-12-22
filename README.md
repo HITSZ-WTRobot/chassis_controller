@@ -2,6 +2,27 @@
 
 _A modular and extensible chassis control framework_
 
+## Include
+
+1. Add this repository as a submodule
+
+2. Add it to your `CMakeLists.txt`
+
+   ```cmake
+   set(ChassisIF_ChassisType <your_chassis_type>)
+   add_subdirectory(<submodule_path>/UserCode)
+   ```
+
+   `ChassisIF_ChassisType` can be:
+    - `MECANUM4`: 4-wheel mecanum chassis
+    - `OMNI4`: 4-wheel omni chassis
+
+3. Link the module
+
+  ```cmake
+  target_link_libraries(${PROJECT_NAME}.elf PRIVATE chassis_controller)
+  ```
+
 ## Prepare
 
 1. choose your chassis type in `interfaces/chassis_if.h`
@@ -31,8 +52,8 @@ please read the `Chassis_Config_t` definition in `chassis_if.h`
                                const bool                target_in_world);
   ```
   `target_in_world` indicates the reference frame in which the velocity remains constant:
-  - when `true`, the chassis maintains a constant velocity **with respect to the world frame**;
-  - when `false`, the chassis maintains a constant velocity **with respect to the body frame**.
+    - when `true`, the chassis maintains a constant velocity **with respect to the world frame**;
+    - when `false`, the chassis maintains a constant velocity **with respect to the body frame**.
 
 - you can set a posture target, and the chassis will follow an S-curve trajectory to reach it
   ```c
