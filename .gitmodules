@@ -1,7 +1,6 @@
 [submodule "Modules/motor_drivers"]
 	path = Modules/motor_drivers
 	url = git@github.com:HITSZ-WTRobot/motor_drivers.git
-	branch = feat/module-CMakeLists
 [submodule "Modules/HWT101CT_driver"]
 	path = Modules/HWT101CT_driver
 	url = git@github.com:HITSZ-WTRobot/HWT101CT_driver.git
