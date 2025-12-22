@@ -25,7 +25,7 @@ void APP_Device_Init()
 
     // 初始化 CAN
     DJI_CAN_FilterInit(&hcan1, 0);
-    CAN_RegisterCallback(&hcan1, 0, DJI_CAN_BaseReceiveCallback);
+    CAN_RegisterCallback(&hcan1, DJI_CAN_BaseReceiveCallback);
 
     HAL_CAN_RegisterCallback(&hcan1, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID, CAN_Fifo0ReceiveCallback);
     CAN_Start(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
