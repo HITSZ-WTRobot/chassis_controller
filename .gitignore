@@ -1,8 +1,6 @@
-# generated on 2025-11-08 18:01:38
+# generated on 2025-12-18 17:10:52
 ### Auto-generated files ###
 # auto-generated files by ide
-# section: clion
-CMakeLists.txt
 
 ### Build artifacts ###
 # CMake build outputs, object files, binaries
@@ -21,16 +19,19 @@ Release/
 
 ### IDE and Editor files ###
 # IDE projects, editor configs, plugins
-# section: keil
-*.uvprojx
-*.uvoptx
 # section: eide
 .eide*
-!.eide/
 # section: iar
 *.eww
 *.ewd
 *.ewp
+# section: keil
+*.uvprojx
+*.uvoptx
+# section: vscode
+.vscode/
+# section: clion
+.idea/
 
 ### STM32CubeMX ###
 # CubeMX auto-generated sources and metadata
