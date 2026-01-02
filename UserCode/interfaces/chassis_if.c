@@ -162,6 +162,9 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
     chassis->feedback.wz  = config->feedback_source.wz;
     chassis->feedback.sx  = config->feedback_source.sx;
     chassis->feedback.sy  = config->feedback_source.sy;
+
+    chassis->feedback.x = config->feedback_source.x;
+    chassis->feedback.y = config->feedback_source.y;
     chassis->feedback.yaw = config->feedback_source.yaw;
 
     chassis->last_feedback.sx  = 0;
