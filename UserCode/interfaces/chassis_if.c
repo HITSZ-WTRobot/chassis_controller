@@ -163,14 +163,14 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
 {
     ChassisDriver_Init(&chassis->driver, &config->driver);
 
-    chassis->feedback.vx  = config->feedback_source.vx;
-    chassis->feedback.vy  = config->feedback_source.vy;
-    chassis->feedback.wz  = config->feedback_source.wz;
-    chassis->feedback.sx  = config->feedback_source.sx;
-    chassis->feedback.sy  = config->feedback_source.sy;
+    chassis->feedback.vx = config->feedback_source.vx;
+    chassis->feedback.vy = config->feedback_source.vy;
+    chassis->feedback.wz = config->feedback_source.wz;
+    chassis->feedback.sx = config->feedback_source.sx;
+    chassis->feedback.sy = config->feedback_source.sy;
 
-    chassis->feedback.x = config->feedback_source.x;
-    chassis->feedback.y = config->feedback_source.y;
+    chassis->feedback.x   = config->feedback_source.x;
+    chassis->feedback.y   = config->feedback_source.y;
     chassis->feedback.yaw = config->feedback_source.yaw;
 
     chassis->last_feedback.sx  = 0;
@@ -180,9 +180,9 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
     chassis->chassis_update_interval = config->chassis_update_interval * 1e-3f; // ms -> s
 
     // 初始化位置 PD 控制器
-    PD_Init(&chassis->posture.trajectory.pd.vx, &config->posture.error_pd.vx);
-    PD_Init(&chassis->posture.trajectory.pd.vy, &config->posture.error_pd.vy);
-    PD_Init(&chassis->posture.trajectory.pd.wz, &config->posture.error_pd.wz);
+    MIT_PD_Init(&chassis->posture.trajectory.pd.vx, &config->posture.error_pd.vx);
+    MIT_PD_Init(&chassis->posture.trajectory.pd.vy, &config->posture.error_pd.vy);
+    MIT_PD_Init(&chassis->posture.trajectory.pd.wz, &config->posture.error_pd.wz);
 
     chassis->ctrl_mode = CHASSIS_VEL;
     ChassisDriver_ApplyVelocity(&chassis->driver, 0, 0, 0);
@@ -292,17 +292,23 @@ void update_chassis_position_control(Chassis_t* chassis)
     };
 
     // 使用 pd 控制器跟随当前目标
-    chassis->posture.trajectory.pd.vx.ref = target_now.x;
-    chassis->posture.trajectory.pd.vx.fdb = chassis->posture.in_world.x;
-    PD_Calculate(&chassis->posture.trajectory.pd.vx);
+    chassis->posture.trajectory.pd.vx.p_ref = target_now.x;
+    chassis->posture.trajectory.pd.vx.p_fdb = chassis->posture.in_world.x;
+    chassis->posture.trajectory.pd.vx.v_ref = ff_velocity.vx;
+    chassis->posture.trajectory.pd.vx.v_fdb = chassis->velocity.feedback.in_world.vx;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vx);
 
-    chassis->posture.trajectory.pd.vy.ref = target_now.y;
-    chassis->posture.trajectory.pd.vy.fdb = chassis->posture.in_world.y;
-    PD_Calculate(&chassis->posture.trajectory.pd.vy);
+    chassis->posture.trajectory.pd.vy.p_ref = target_now.y;
+    chassis->posture.trajectory.pd.vy.p_fdb = chassis->posture.in_world.y;
+    chassis->posture.trajectory.pd.vy.v_ref = ff_velocity.vy;
+    chassis->posture.trajectory.pd.vy.v_fdb = chassis->velocity.feedback.in_world.vy;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vy);
 
-    chassis->posture.trajectory.pd.wz.ref = target_now.yaw;
-    chassis->posture.trajectory.pd.wz.fdb = chassis->posture.in_world.yaw;
-    PD_Calculate(&chassis->posture.trajectory.pd.wz);
+    chassis->posture.trajectory.pd.wz.p_ref = target_now.yaw;
+    chassis->posture.trajectory.pd.wz.p_fdb = chassis->posture.in_world.yaw;
+    chassis->posture.trajectory.pd.wz.v_ref = ff_velocity.wz;
+    chassis->posture.trajectory.pd.wz.v_fdb = chassis->velocity.feedback.in_world.wz;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.wz);
 
     // 叠加前馈和 pd 输出
     const Chassis_Velocity_t velocity_in_world = {

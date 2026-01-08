@@ -28,7 +28,7 @@
 #define __CHASSIS_IF_VERSION__ "2.0.0"
 #define _USE_MATH_DEFINES
 #include "cmsis_os2.h"
-#include "libs/pid_pd.h"
+#include "libs/mit_pd.h"
 #include "libs/s_curve.h"
 
 #include <stdbool.h>
@@ -103,6 +103,12 @@ typedef struct
         volatile bool      target_in_world; ///< 速度是否相对于世界坐标系不变
         Chassis_Velocity_t in_world;        ///< 世界坐标系下速度
         Chassis_Velocity_t in_body;         ///< 车体坐标系下速度
+
+        struct
+        {
+            Chassis_Velocity_t in_world;
+            Chassis_Velocity_t in_body;
+        } feedback; ///< 计算的车体速度反馈
     } velocity;
 
     struct
@@ -119,9 +125,9 @@ typedef struct
 
             struct
             {
-                PD_t vx; ///< x 速度 PD 控制器
-                PD_t vy; ///< y 速度 PD 控制器
-                PD_t wz; ///< 角速度 PD 控制器
+                MIT_PD_t vx; ///< x 速度 PD 控制器
+                MIT_PD_t vy; ///< y 速度 PD 控制器
+                MIT_PD_t wz; ///< 角速度 PD 控制器
             } pd;
 
             struct
@@ -182,9 +188,9 @@ typedef struct
          */
         struct
         {
-            PD_Config_t vx; ///< x 速度 PD 控制器
-            PD_Config_t vy; ///< y 速度 PD 控制器
-            PD_Config_t wz; ///< 角速度 PD 控制器
+            MIT_PD_Config_t vx; ///< x 速度 PD 控制器
+            MIT_PD_Config_t vy; ///< y 速度 PD 控制器
+            MIT_PD_Config_t wz; ///< 角速度 PD 控制器
         } error_pd;
     } posture;
 
