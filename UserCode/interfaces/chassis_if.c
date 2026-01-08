@@ -35,6 +35,9 @@ extern "C"
 #    define ChassisForward_GetYaw       Mecanum4Forward_GetYaw
 #    define ChassisForward_GetX         Mecanum4Forward_GetX
 #    define ChassisForward_GetY         Mecanum4Forward_GetY
+#    define ChassisForward_GetWz        Mecanum4Forward_GetWz
+#    define ChassisForward_GetVx        Mecanum4Forward_GetVx
+#    define ChassisForward_GetVy        Mecanum4Forward_GetVy
 #endif
 #ifdef CHASSIS_OMNI4
 #    define ChassisDriver_Init          Omni4_Init
@@ -43,6 +46,9 @@ extern "C"
 #    define ChassisForward_GetYaw       Omni4Forward_GetYaw
 #    define ChassisForward_GetX         Omni4Forward_GetX
 #    define ChassisForward_GetY         Omni4Forward_GetY
+#    define ChassisForward_GetWz        Omni4Forward_GetWz
+#    define ChassisForward_GetVx        Omni4Forward_GetVx
+#    define ChassisForward_GetVy        Omni4Forward_GetVy
 #endif
 
 static uint32_t isr_lock()
@@ -220,6 +226,22 @@ static void update_chassis_posture(Chassis_t* chassis)
     }
 }
 
+static void update_chassis_velocity_feedback(Chassis_t* chassis)
+{
+    chassis->velocity.feedback.in_body.vx = chassis->feedback.vx != NULL
+                                                    ? *chassis->feedback.vx
+                                                    : ChassisForward_GetVx(&chassis->driver);
+    chassis->velocity.feedback.in_body.vy = chassis->feedback.vy != NULL
+                                                    ? *chassis->feedback.vy
+                                                    : ChassisForward_GetVy(&chassis->driver);
+    chassis->velocity.feedback.in_body.wz = chassis->feedback.wz != NULL
+                                                    ? *chassis->feedback.wz
+                                                    : ChassisForward_GetWz(&chassis->driver);
+    Chassis_BodyVelocity2WorldVelocity(chassis,
+                                       &chassis->velocity.feedback.in_body,
+                                       &chassis->velocity.feedback.in_world);
+}
+
 static void update_chassis_velocity_control(Chassis_t* chassis)
 {
     if (chassis->velocity.target_in_world)
@@ -302,6 +324,7 @@ void update_chassis_position_control(Chassis_t* chassis)
 void Chassis_Update(Chassis_t* chassis)
 {
     update_chassis_posture(chassis);
+    update_chassis_velocity_feedback(chassis);
     if (chassis->ctrl_mode == CHASSIS_VEL)
         update_chassis_velocity_control(chassis);
     else if (chassis->ctrl_mode == CHASSIS_POS)
@@ -487,10 +510,11 @@ void Chassis_SetWorldFromCurrent(Chassis_t* chassis)
     chassis->world.posture.x += chassis->posture.in_world.x;
     chassis->world.posture.y += chassis->posture.in_world.y;
     chassis->world.posture.yaw += chassis->posture.in_world.yaw;
-    chassis->posture.in_world.x   = 0.0f;
-    chassis->posture.in_world.y   = 0.0f;
-    chassis->posture.in_world.yaw = 0.0f;
-    chassis->velocity.in_world    = chassis->velocity.in_body;
+    chassis->posture.in_world.x         = 0.0f;
+    chassis->posture.in_world.y         = 0.0f;
+    chassis->posture.in_world.yaw       = 0.0f;
+    chassis->velocity.in_world          = chassis->velocity.in_body;
+    chassis->velocity.feedback.in_world = chassis->velocity.feedback.in_body;
 
     isr_unlock(saved);
 
