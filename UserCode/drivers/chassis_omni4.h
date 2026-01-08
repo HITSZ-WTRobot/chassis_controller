@@ -29,6 +29,7 @@
 #define RPS2RPM(__RPS__) ((__RPS__) * 60.0f / (2 * 3.14159265358979323846f))
 #define DEG2RAD(__DEG__) ((__DEG__) * (float) 3.14159265358979323846f / 180.0f)
 #define RAD2DEG(__RAD__) ((__RAD__) * 180.0f / (float) 3.14159265358979323846f)
+#define RPM2DPS(__RPM__) ((__RPM__) / 60.0f * 360.0f)
 
 typedef enum
 {
@@ -65,5 +66,8 @@ void Omni4_Update(const Omni4_t* chassis);
 float Omni4Forward_GetYaw(const Omni4_t* chassis);
 float Omni4Forward_GetX(const Omni4_t* chassis);
 float Omni4Forward_GetY(const Omni4_t* chassis);
+float Omni4Forward_GetWz(const Omni4_t* chassis);
+float Omni4Forward_GetVx(const Omni4_t* chassis);
+float Omni4Forward_GetVy(const Omni4_t* chassis);
 
 #endif // CHASSIS_OMNI4_H

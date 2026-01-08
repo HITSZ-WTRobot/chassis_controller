@@ -126,27 +126,18 @@ void Mecanum4_Update(const Mecanum4_t* chassis)
 /* Mecanum4 forward kinematics solutions */
 float Mecanum4Forward_GetYaw(const Mecanum4_t* chassis)
 {
-    // TODO: 优化 motor_if 的 GetAngle 函数
     if (chassis->chassis_type == MECANUM4_O_TYPE)
         return chassis->wheel_radius / (4 * chassis->k_omega) *
-               (Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_FR]->motor) -
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_FL]->motor) +
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_RR]->motor) -
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_RL]->motor));
+               (MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]) -
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]));
     if (chassis->chassis_type == MECANUM4_X_TYPE)
         return chassis->wheel_radius / (4 * chassis->k_omega) *
-               (Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_FR]->motor) -
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_FL]->motor) -
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_RR]->motor) +
-                Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]->motor_type,
-                               chassis->wheel[MECANUM4_WHEEL_RL]->motor));
+               (MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]) -
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]));
 
     return 0;
 }
@@ -154,38 +145,70 @@ float Mecanum4Forward_GetYaw(const Mecanum4_t* chassis)
 float Mecanum4Forward_GetX(const Mecanum4_t* chassis)
 {
     return chassis->wheel_radius * 0.25f *
-           DEG2RAD(Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]->motor_type,
-                                  chassis->wheel[MECANUM4_WHEEL_FR]->motor) +
-                   Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]->motor_type,
-                                  chassis->wheel[MECANUM4_WHEEL_FL]->motor) +
-                   Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]->motor_type,
-                                  chassis->wheel[MECANUM4_WHEEL_RR]->motor) +
-                   Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]->motor_type,
-                                  chassis->wheel[MECANUM4_WHEEL_RL]->motor));
+           DEG2RAD(MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]) +
+                   MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                   MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                   MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]));
 }
 
 float Mecanum4Forward_GetY(const Mecanum4_t* chassis)
 {
     if (chassis->chassis_type == MECANUM4_O_TYPE)
         return chassis->wheel_radius * 0.25f *
-               DEG2RAD(Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_FR]->motor) -
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_FL]->motor) -
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_RR]->motor) +
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_RL]->motor));
+               DEG2RAD(MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]) -
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]));
     if (chassis->chassis_type == MECANUM4_X_TYPE)
         return chassis->wheel_radius / (4 * chassis->k_omega) *
-               DEG2RAD(-Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]->motor_type,
-                                       chassis->wheel[MECANUM4_WHEEL_FR]->motor) +
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_FL]->motor) +
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_RR]->motor) -
-                       Motor_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]->motor_type,
-                                      chassis->wheel[MECANUM4_WHEEL_RL]->motor));
+               DEG2RAD(-MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FR]) +
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RR]) -
+                       MotorCtrl_GetAngle(chassis->wheel[MECANUM4_WHEEL_RL]));
+
+    return 0;
+}
+
+float Mecanum4Forward_GetWz(const Mecanum4_t* chassis)
+{
+    if (chassis->chassis_type == MECANUM4_O_TYPE)
+        return RPM2DPS(chassis->wheel_radius / (4 * chassis->k_omega) *
+                       (MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RR]) -
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RL])));
+    if (chassis->chassis_type == MECANUM4_X_TYPE)
+        return RPM2DPS(chassis->wheel_radius / (4 * chassis->k_omega) *
+                       (MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FL]) -
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                        MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RL])));
+    return 0;
+}
+
+float Mecanum4Forward_GetVx(const Mecanum4_t* chassis)
+{
+    return RPM2DPS(chassis->wheel_radius * 0.25f *
+                   DEG2RAD(MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FR]) +
+                           MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                           MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                           MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RL])));
+}
+
+float Mecanum4Forward_GetVy(const Mecanum4_t* chassis)
+{
+    if (chassis->chassis_type == MECANUM4_O_TYPE)
+        return RPM2DPS(chassis->wheel_radius * 0.25f *
+                       DEG2RAD(MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FR]) -
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FL]) -
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RR]) +
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RL])));
+    if (chassis->chassis_type == MECANUM4_X_TYPE)
+        return RPM2DPS(chassis->wheel_radius / (4 * chassis->k_omega) *
+                       DEG2RAD(-MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FR]) +
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_FL]) +
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RR]) -
+                               MotorCtrl_GetVelocity(chassis->wheel[MECANUM4_WHEEL_RL])));
 
     return 0;
 }
