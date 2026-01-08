@@ -96,4 +96,8 @@ add_dependencies(${LIB_NAME} motor_drivers)
 target_link_libraries(${LIB_NAME} PRIVATE s_curve)
 add_dependencies(${LIB_NAME} s_curve)
 
+# Repo: https://github.com/HITSZ-WTRobot/C_Library.git
+target_link_libraries(${LIB_NAME} PRIVATE libs_mit_pd)
+add_dependencies(${LIB_NAME} libs_mit_pd)
+
 target_link_libraries(${LIB_NAME} PRIVATE m)

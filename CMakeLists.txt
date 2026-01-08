@@ -93,6 +93,8 @@ add_subdirectory(Modules/HWT101CT_driver/UserCode)
 
 add_subdirectory(Modules/s-curve-planner)
 
+add_subdirectory(Modules/C_Library)
+
 # =======================================================
 
 # Add linked libraries
@@ -103,4 +105,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         motor_drivers
         HW101CT_driver
         s_curve
+        libs_mit_pd
 )
