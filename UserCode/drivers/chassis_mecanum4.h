@@ -39,6 +39,8 @@
 
 #define DEG2RAD(__DEG__) ((__DEG__) * (float) 3.14159265358979323846f / 180.0f)
 
+#define RPM2DPS(__RPM__) ((__RPM__) / 60.0f * 360.0f)
+
 typedef enum
 {
     MECANUM4_WHEEL_FR = 0U, ///< 右前轮
@@ -89,5 +91,8 @@ void Mecanum4_Update(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetYaw(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetX(const Mecanum4_t* chassis);
 float Mecanum4Forward_GetY(const Mecanum4_t* chassis);
+float Mecanum4Forward_GetWz(const Mecanum4_t* chassis);
+float Mecanum4Forward_GetVx(const Mecanum4_t* chassis);
+float Mecanum4Forward_GetVy(const Mecanum4_t* chassis);
 
 #endif // CHASSIS_MECANUM4_H

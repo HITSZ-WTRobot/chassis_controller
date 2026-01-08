@@ -94,14 +94,10 @@ void Omni4_Update(const Omni4_t* chassis)
  */
 float Omni4Forward_GetYaw(const Omni4_t* chassis)
 {
-    const float angle_fr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FR]->motor);
-    const float angle_fl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FL]->motor);
-    const float angle_rl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RL]->motor);
-    const float angle_rr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RR]->motor);
+    const float angle_fr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]);
 
     return -(chassis->wheel_radius / (4 * chassis->half_diag)) *
            DEG2RAD(angle_fr + angle_fl + angle_rl + angle_rr);
@@ -112,14 +108,10 @@ float Omni4Forward_GetYaw(const Omni4_t* chassis)
  */
 float Omni4Forward_GetX(const Omni4_t* chassis)
 {
-    const float angle_fr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FR]->motor);
-    const float angle_fl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FL]->motor);
-    const float angle_rl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RL]->motor);
-    const float angle_rr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RR]->motor);
+    const float angle_fr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]);
 
     return chassis->wheel_radius / 4 * sqrtf(2) *
            DEG2RAD(angle_fr - angle_fl - angle_rl + angle_rr);
@@ -130,15 +122,52 @@ float Omni4Forward_GetX(const Omni4_t* chassis)
  */
 float Omni4Forward_GetY(const Omni4_t* chassis)
 {
-    const float angle_fr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FR]->motor);
-    const float angle_fl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_FL]->motor);
-    const float angle_rl = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RL]->motor);
-    const float angle_rr = Motor_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]->motor_type,
-                                          chassis->wheel[OMNI4_WHEEL_RR]->motor);
+    const float angle_fr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetAngle(chassis->wheel[OMNI4_WHEEL_RR]);
 
     return chassis->wheel_radius / 4 * sqrtf(2) *
            DEG2RAD(angle_fr + angle_fl - angle_rl - angle_rr);
+}
+/**
+ * 正运动学解算 - 旋转速度
+ */
+float Omni4Forward_GetWz(const Omni4_t* chassis)
+{
+    const float angle_fr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RR]);
+
+    return RPM2DPS(-(chassis->wheel_radius / (4 * chassis->half_diag)) *
+                   DEG2RAD(angle_fr + angle_fl + angle_rl + angle_rr));
+}
+
+/**
+ * 正运动学解算 - X方向速度
+ */
+float Omni4Forward_GetVx(const Omni4_t* chassis)
+{
+    const float angle_fr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RR]);
+
+    return RPM2DPS(chassis->wheel_radius / 4 * sqrtf(2) *
+                   DEG2RAD(angle_fr - angle_fl - angle_rl + angle_rr));
+}
+
+/**
+ * 正运动学解算 - Y方向速度
+ */
+float Omni4Forward_GetVy(const Omni4_t* chassis)
+{
+    const float angle_fr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FR]);
+    const float angle_fl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_FL]);
+    const float angle_rl = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RL]);
+    const float angle_rr = MotorCtrl_GetVelocity(chassis->wheel[OMNI4_WHEEL_RR]);
+
+    return RPM2DPS(chassis->wheel_radius / 4 * sqrtf(2) *
+                   DEG2RAD(angle_fr + angle_fl - angle_rl - angle_rr));
 }
