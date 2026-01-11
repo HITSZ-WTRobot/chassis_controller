@@ -94,7 +94,7 @@ typedef struct
 {
     osMutexId_t lock;
 
-    float chassis_update_interval; ///< 底盘更新周期 (unit: s)
+    float traj_update_interval; ///< 底盘曲线更新间隔 (unit: s)
 
     volatile Chassis_CtrlMode_t ctrl_mode; ///< 控制模式
 
@@ -136,6 +136,9 @@ typedef struct
                 SCurve_t y;
                 SCurve_t yaw;
             } curve;
+
+            Chassis_Posture_t  current_target_pos;
+            Chassis_Velocity_t current_target_vel;
         } trajectory;
     } posture;
 
@@ -179,7 +182,7 @@ typedef struct
 {
     ChassisDriver_Config_t driver; ///< 底盘驱动配置
 
-    float chassis_update_interval; ///< 底盘更新间隔 (unit: ms)
+    float traj_update_interval; ///< 底盘曲线更新间隔 (unit: s)
 
     struct
     {
@@ -222,7 +225,10 @@ typedef struct
 } Chassis_Config_t;
 
 void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config);
-void Chassis_Update(Chassis_t* chassis);
+void Chassis_FeedbackUpdate(Chassis_t* chassis);
+void Chassis_VelUpdate(Chassis_t* chassis);
+void Chassis_TrajUpdate(Chassis_t* chassis);
+void Chassis_TrajPDUpdate(Chassis_t* chassis);
 
 void Chassis_WorldVelocity2BodyVelocity(const Chassis_t*          chassis,
                                         const Chassis_Velocity_t* velocity_in_world,
