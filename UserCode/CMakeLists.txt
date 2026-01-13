@@ -85,19 +85,19 @@ endforeach ()
 # ---------------------------------------------------------------------------
 # declare dependencies
 # ---------------------------------------------------------------------------
-target_link_libraries(${LIB_NAME} PRIVATE stm32cubemx)
+target_link_libraries(${LIB_NAME} PUBLIC stm32cubemx)
 add_dependencies(${LIB_NAME} stm32cubemx)
 
 # Repo: https://github.com/HITSZ-WTRobot/motor_drivers
-target_link_libraries(${LIB_NAME} PRIVATE motor_drivers)
+target_link_libraries(${LIB_NAME} PUBLIC motor_drivers)
 add_dependencies(${LIB_NAME} motor_drivers)
 
 # Repo: https://github.com/HITSZ-WTRobot/s-curve-planner
-target_link_libraries(${LIB_NAME} PRIVATE s_curve)
+target_link_libraries(${LIB_NAME} PUBLIC s_curve)
 add_dependencies(${LIB_NAME} s_curve)
 
 # Repo: https://github.com/HITSZ-WTRobot/C_Library.git
-target_link_libraries(${LIB_NAME} PRIVATE libs_mit_pd)
+target_link_libraries(${LIB_NAME} PUBLIC libs_mit_pd)
 add_dependencies(${LIB_NAME} libs_mit_pd)
 
-target_link_libraries(${LIB_NAME} PRIVATE m)
+target_link_libraries(${LIB_NAME} PUBLIC m)
