@@ -15,9 +15,23 @@ extern "C"
 
 extern Chassis_t chassis;
 
-static void APP_Chassis_Update()
+static void APP_Chassis_Update_200Hz()
 {
-    Chassis_Update(&chassis);
+    Chassis_TrajUpdate(&chassis);
+}
+
+static uint32_t prescaler_500Hz = 0;
+
+static void APP_Chassis_Update_1kHz()
+{
+    Chassis_FeedbackUpdate(&chassis);
+    prescaler_500Hz++;
+    if (prescaler_500Hz >= 2)
+    {
+        Chassis_TrajPDUpdate(&chassis);
+        prescaler_500Hz = 0;
+    }
+    Chassis_VelUpdate(&chassis);
 }
 
 void APP_Chassis_InitBeforeUpdate();
