@@ -341,7 +341,7 @@ void Chassis_TrajUpdate(Chassis_t* chassis)
     chassis->posture.trajectory.current_target_vel = ff_velocity;
 
     // 计算当前目标
-    const Chassis_Posture_t target_now{
+    const Chassis_Posture_t target_now = {
         .x   = SCurve_CalcX(&chassis->posture.trajectory.curve.x, now),
         .y   = SCurve_CalcX(&chassis->posture.trajectory.curve.y, now),
         .yaw = SCurve_CalcX(&chassis->posture.trajectory.curve.yaw, now)
