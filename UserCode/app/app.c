@@ -17,11 +17,16 @@
 #include "interfaces/chassis_if.h"
 #include "interfaces/motor_if.h"
 
-void CtrlTIM_Callback(TIM_HandleTypeDef* htim)
+void TIM_Callback_1kHz(TIM_HandleTypeDef* htim)
 {
-    APP_Chassis_Update();
+    APP_Chassis_Update_1kHz();
 
     APP_Device_Update();
+}
+
+void TIM_Callback_200Hz(TIM_HandleTypeDef* htim)
+{
+    APP_Chassis_Update_200Hz();
 }
 
 /**
@@ -37,8 +42,10 @@ void Init(void* argument)
     APP_Chassis_InitBeforeUpdate();
 
     // 注册定时器
-    HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, CtrlTIM_Callback);
+    HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM_Callback_1kHz);
     HAL_TIM_Base_Start_IT(&htim6);
+    HAL_TIM_RegisterCallback(&htim13, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM_Callback_200Hz);
+    HAL_TIM_Base_Start_IT(&htim13);
 
     // 一秒钟时间等待各种东西更新
     osDelay(1000);

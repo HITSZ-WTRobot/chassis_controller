@@ -30,7 +30,7 @@ const Chassis_Config_t chassis_config = {
             .wheel_rear_left   = &motor_vel_ctrl[2], ///< 左后方
             .wheel_rear_right  = &motor_vel_ctrl[3], ///< 右后方
     },
-    .chassis_update_interval = 1.0f,
+    .traj_update_interval = 0.005f,
     .posture = {
         .error_pd = {
             .vx = {.Kp = 2, .Kd = 1, .abs_output_max = 0.1f},

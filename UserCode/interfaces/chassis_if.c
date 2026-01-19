@@ -177,7 +177,7 @@ void Chassis_Init(Chassis_t* chassis, const Chassis_Config_t* config)
     chassis->last_feedback.sy  = 0;
     chassis->last_feedback.yaw = 0;
 
-    chassis->chassis_update_interval = config->chassis_update_interval * 1e-3f; // ms -> s
+    chassis->traj_update_interval = config->traj_update_interval;
 
     // 初始化位置 PD 控制器
     MIT_PD_Init(&chassis->posture.trajectory.pd.vx, &config->posture.error_pd.vx);
@@ -272,49 +272,16 @@ static void update_chassis_velocity_control(Chassis_t* chassis)
                                 chassis->velocity.in_body.wz);
 }
 
-void update_chassis_position_control(Chassis_t* chassis)
+static void apply_chassis_position_velocity(Chassis_t* chassis)
 {
-    const float now = chassis->posture.trajectory.now + chassis->chassis_update_interval;
-    chassis->posture.trajectory.now = now;
-
-    // 计算前馈速度
-    const Chassis_Velocity_t ff_velocity = {
-        .vx = SCurve_CalcV(&chassis->posture.trajectory.curve.x, now),
-        .vy = SCurve_CalcV(&chassis->posture.trajectory.curve.y, now),
-        .wz = SCurve_CalcV(&chassis->posture.trajectory.curve.yaw, now)
-    };
-
-    // 计算当前目标
-    const Chassis_Posture_t target_now = {
-        .x   = SCurve_CalcX(&chassis->posture.trajectory.curve.x, now),
-        .y   = SCurve_CalcX(&chassis->posture.trajectory.curve.y, now),
-        .yaw = SCurve_CalcX(&chassis->posture.trajectory.curve.yaw, now)
-    };
-
-    // 使用 pd 控制器跟随当前目标
-    chassis->posture.trajectory.pd.vx.p_ref = target_now.x;
-    chassis->posture.trajectory.pd.vx.p_fdb = chassis->posture.in_world.x;
-    chassis->posture.trajectory.pd.vx.v_ref = ff_velocity.vx;
-    chassis->posture.trajectory.pd.vx.v_fdb = chassis->velocity.feedback.in_world.vx;
-    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vx);
-
-    chassis->posture.trajectory.pd.vy.p_ref = target_now.y;
-    chassis->posture.trajectory.pd.vy.p_fdb = chassis->posture.in_world.y;
-    chassis->posture.trajectory.pd.vy.v_ref = ff_velocity.vy;
-    chassis->posture.trajectory.pd.vy.v_fdb = chassis->velocity.feedback.in_world.vy;
-    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vy);
-
-    chassis->posture.trajectory.pd.wz.p_ref = target_now.yaw;
-    chassis->posture.trajectory.pd.wz.p_fdb = chassis->posture.in_world.yaw;
-    chassis->posture.trajectory.pd.wz.v_ref = ff_velocity.wz;
-    chassis->posture.trajectory.pd.wz.v_fdb = chassis->velocity.feedback.in_world.wz;
-    MIT_PD_Calculate(&chassis->posture.trajectory.pd.wz);
-
     // 叠加前馈和 pd 输出
     const Chassis_Velocity_t velocity_in_world = {
-        ff_velocity.vx + chassis->posture.trajectory.pd.vx.output,
-        ff_velocity.vy + chassis->posture.trajectory.pd.vy.output,
-        ff_velocity.wz + chassis->posture.trajectory.pd.wz.output,
+        chassis->posture.trajectory.current_target_vel.vx +
+                chassis->posture.trajectory.pd.vx.output,
+        chassis->posture.trajectory.current_target_vel.vy +
+                chassis->posture.trajectory.pd.vy.output,
+        chassis->posture.trajectory.current_target_vel.wz +
+                chassis->posture.trajectory.pd.wz.output,
     };
 
     // 将世界坐标系速度转换为底盘坐标系速度
@@ -327,16 +294,90 @@ void update_chassis_position_control(Chassis_t* chassis)
                                 body_velocity.wz);
 }
 
-void Chassis_Update(Chassis_t* chassis)
+/**
+ * 更新底盘反馈
+ * @note 推荐在所有更新最前，1kHz
+ * @param chassis 底盘
+ */
+void Chassis_FeedbackUpdate(Chassis_t* chassis)
 {
     update_chassis_posture(chassis);
     update_chassis_velocity_feedback(chassis);
+}
+
+/**
+ * 更新速度控制
+ * @note 推荐在所有更新最后，推荐 1kHz
+ * @param chassis 底盘
+ */
+void Chassis_VelUpdate(Chassis_t* chassis)
+{
     if (chassis->ctrl_mode == CHASSIS_VEL)
         update_chassis_velocity_control(chassis);
-    else if (chassis->ctrl_mode == CHASSIS_POS)
-        update_chassis_position_control(chassis);
     // 更新底盘驱动器
     ChassisDriver_Update(&chassis->driver);
+}
+
+/**
+ * 更新底盘轨迹规划曲线
+ * @note 推荐 200Hz
+ * @param chassis 底盘
+ */
+void Chassis_TrajUpdate(Chassis_t* chassis)
+{
+    if (chassis->ctrl_mode != CHASSIS_POS)
+        return;
+
+    // 推进曲线
+    const float now = chassis->posture.trajectory.now + chassis->traj_update_interval;
+    chassis->posture.trajectory.now = now;
+
+    // 计算前馈速度
+    const Chassis_Velocity_t ff_velocity = {
+        .vx = SCurve_CalcV(&chassis->posture.trajectory.curve.x, now),
+        .vy = SCurve_CalcV(&chassis->posture.trajectory.curve.y, now),
+        .wz = SCurve_CalcV(&chassis->posture.trajectory.curve.yaw, now)
+    };
+    chassis->posture.trajectory.current_target_vel = ff_velocity;
+
+    // 计算当前目标
+    const Chassis_Posture_t target_now = {
+        .x   = SCurve_CalcX(&chassis->posture.trajectory.curve.x, now),
+        .y   = SCurve_CalcX(&chassis->posture.trajectory.curve.y, now),
+        .yaw = SCurve_CalcX(&chassis->posture.trajectory.curve.yaw, now)
+    };
+    chassis->posture.trajectory.current_target_pos = target_now;
+
+    apply_chassis_position_velocity(chassis);
+}
+
+/**
+ * 更新底盘轨迹 PD 控制器
+ * @note 推荐 500Hz
+ * @param chassis 底盘
+ */
+void Chassis_TrajPDUpdate(Chassis_t* chassis)
+{
+    // 使用 pd 控制器跟随当前目标
+    chassis->posture.trajectory.pd.vx.p_ref = chassis->posture.trajectory.current_target_pos.x;
+    chassis->posture.trajectory.pd.vx.p_fdb = chassis->posture.in_world.x;
+    chassis->posture.trajectory.pd.vx.v_ref = chassis->posture.trajectory.current_target_vel.vx;
+    chassis->posture.trajectory.pd.vx.v_fdb = chassis->velocity.feedback.in_world.vx;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vx);
+
+    chassis->posture.trajectory.pd.vy.p_ref = chassis->posture.trajectory.current_target_pos.y;
+    chassis->posture.trajectory.pd.vy.p_fdb = chassis->posture.in_world.y;
+    chassis->posture.trajectory.pd.vy.v_ref = chassis->posture.trajectory.current_target_vel.vy;
+    chassis->posture.trajectory.pd.vy.v_fdb = chassis->velocity.feedback.in_world.vy;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.vy);
+
+    chassis->posture.trajectory.pd.wz.p_ref = chassis->posture.trajectory.current_target_pos.yaw;
+    chassis->posture.trajectory.pd.wz.p_fdb = chassis->posture.in_world.yaw;
+    chassis->posture.trajectory.pd.wz.v_ref = chassis->posture.trajectory.current_target_vel.wz;
+    chassis->posture.trajectory.pd.wz.v_fdb = chassis->velocity.feedback.in_world.wz;
+    MIT_PD_Calculate(&chassis->posture.trajectory.pd.wz);
+
+    apply_chassis_position_velocity(chassis);
 }
 
 /**
