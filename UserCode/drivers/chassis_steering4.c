@@ -144,29 +144,33 @@ static void steering4_velocity_forward(const Steering4_t* chassis, float* vx, fl
     *wz *= chassis->inv_l2;
 }
 
-static void steering4_position_forward(const Steering4_t* chassis, float* x, float* y, float* z)
+float Steering4Forward_GetYaw(const Steering4_t* chassis)
 {
-    *x = 0, *y = 0, *z = 0;
-    for (size_t i = 0; i < STEERING4_WHEEL_MAX; i++)
-    {
-        float xi = 0, yi = 0;
-        get_wheel_position(chassis, i, &xi, &yi);
-        const float sin_theta = sinf(chassis->wheel[i].velocity.angle);
-        const float cos_theta = cosf(chassis->wheel[i].velocity.angle);
-        *x += chassis->wheel[i].velocity.speed * cos_theta;
-        *y += chassis->wheel[i].velocity.speed * sin_theta;
-        *z += -yi * cos_theta + xi * sin_theta;
-    }
-    *x *= 0.25f;
-    *y *= 0.25f;
-    *z *= chassis->inv_l2;
+    return 0;
 }
-
-// TODO: 优化此处函数调用的性能
-
-float Steering4Forward_GetYaw(const Steering4_t* chassis) {}
-float Steering4Forward_GetX(const Steering4_t* chassis) {}
-float Steering4Forward_GetY(const Steering4_t* chassis) {}
-float Steering4Forward_GetWz(const Steering4_t* chassis) {}
-float Steering4Forward_GetVx(const Steering4_t* chassis) {}
-float Steering4Forward_GetVy(const Steering4_t* chassis) {}
+float Steering4Forward_GetX(const Steering4_t* chassis)
+{
+    return 0;
+}
+float Steering4Forward_GetY(const Steering4_t* chassis)
+{
+    return 0;
+}
+float Steering4Forward_GetWz(const Steering4_t* chassis)
+{
+    float vx = 0, vy = 0, wz = 0;
+    steering4_velocity_forward(chassis, &vx, &vy, &wz);
+    return wz;
+}
+float Steering4Forward_GetVx(const Steering4_t* chassis)
+{
+    float vx = 0, vy = 0, wz = 0;
+    steering4_velocity_forward(chassis, &vx, &vy, &wz);
+    return vx;
+}
+float Steering4Forward_GetVy(const Steering4_t* chassis)
+{
+    float vx = 0, vy = 0, wz = 0;
+    steering4_velocity_forward(chassis, &vx, &vy, &wz);
+    return vy;
+}

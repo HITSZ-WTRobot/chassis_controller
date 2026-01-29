@@ -110,7 +110,6 @@ void Init(void* argument)
 
     SteeringWheel_Init(&wheel,
                        &(SteeringWheel_Config_t) {
-                               .radius       = 50.0f,
                                .drive_motor  = &driver_motor_ctrl,
                                .steer_motor  = &steerer_motor_pos_ctrl,
                                .steer_offset = 10.0f,

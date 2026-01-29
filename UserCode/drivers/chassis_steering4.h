@@ -54,7 +54,7 @@ typedef struct
 
 void Steering4_ApplyVelocity(Steering4_t* chassis, float vx, float vy, float wz);
 void Steering4_Update(Steering4_t* chassis);
-
+void Steering4_Init(Steering4_t* chassis, const Steering4_Config_t* config);
 // forward kinematics solutions
 float Steering4Forward_GetYaw(const Steering4_t* chassis);
 float Steering4Forward_GetX(const Steering4_t* chassis);

@@ -37,6 +37,7 @@ set(ChassisIF_ChassisType "" CACHE STRING "select chassis type (required)")
 set_property(CACHE ChassisIF_ChassisType PROPERTY STRINGS
         MECANUM4
         OMNI4
+        STEERING4
 )
 
 if (ChassisIF_ChassisType STREQUAL "MECANUM4")
@@ -46,7 +47,11 @@ if (ChassisIF_ChassisType STREQUAL "MECANUM4")
 elseif (ChassisIF_ChassisType STREQUAL "OMNI4")
     list(APPEND ALL_SOURCES drivers/chassis_omni4.c)
     list(APPEND ALL_HEADERS "drivers/chassis_omni4.h")
-    list(APPEND DRIVER_MACROS CHASSIS_OMNI)
+    list(APPEND DRIVER_MACROS CHASSIS_OMNI4)
+elseif (ChassisIF_ChassisType STREQUAL "STEERING4")
+    list(APPEND ALL_SOURCES drivers/chassis_steering4.c)
+    list(APPEND ALL_HEADERS "drivers/chassis_steering4.h")
+    list(APPEND DRIVER_MACROS CHASSIS_STEERING4)
 else ()
     message(FATAL_ERROR "invalid ChassisIF_ChassisType: ${ChassisIF_ChassisType}")
 endif ()
