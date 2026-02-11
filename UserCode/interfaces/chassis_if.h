@@ -35,6 +35,7 @@
 
 // #define CHASSIS_MECANUM4
 // #define CHASSIS_OMNI4
+// #define CHASSIS_STEERING4
 
 #ifdef CHASSIS_MECANUM4
 #    include "drivers/chassis_mecanum4.h"
@@ -48,7 +49,13 @@
 #    define ChassisDriver_Config_t Omni4_Config_t
 #endif
 
-#if (defined(CHASSIS_MECANUM4) + defined(CHASSIS_OMNI4)) != 1
+#ifdef CHASSIS_STEERING4
+#    include "drivers/chassis_steering4.h"
+#    define ChassisDriver_t        Steering4_t
+#    define ChassisDriver_Config_t Steering4_Config_t
+#endif
+
+#if (defined(CHASSIS_MECANUM4) + defined(CHASSIS_OMNI4) + defined(CHASSIS_STEERING4)) != 1
 #    error "There must be one and only one chassis type enabled at a time."
 #endif
 

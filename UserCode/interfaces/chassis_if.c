@@ -50,6 +50,17 @@ extern "C"
 #    define ChassisForward_GetVx        Omni4Forward_GetVx
 #    define ChassisForward_GetVy        Omni4Forward_GetVy
 #endif
+#ifdef CHASSIS_STEERING4
+#    define ChassisDriver_Init          Steering4_Init
+#    define ChassisDriver_ApplyVelocity Steering4_ApplyVelocity
+#    define ChassisDriver_Update        Steering4_Update
+#    define ChassisForward_GetYaw       Steering4Forward_GetYaw
+#    define ChassisForward_GetX         Steering4Forward_GetX
+#    define ChassisForward_GetY         Steering4Forward_GetY
+#    define ChassisForward_GetWz        Steering4Forward_GetWz
+#    define ChassisForward_GetVx        Steering4Forward_GetVx
+#    define ChassisForward_GetVy        Steering4Forward_GetVy
+#endif
 
 static uint32_t isr_lock()
 {

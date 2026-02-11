@@ -16,17 +16,35 @@
 #include "drivers/HWT101CT.h"
 #include "interfaces/chassis_if.h"
 #include "interfaces/motor_if.h"
+#include "drivers/steering_wheel.h"
+
+SteeringWheel_t wheel;
+Motor_VelCtrl_t driver_motor_ctrl;
+DJI_t           steerer_motor;
+VESC_t          driver_motor;
+Motor_VelCtrl_t steerer_motor_vel_ctrl;
+Motor_PosCtrl_t steerer_motor_pos_ctrl;
+GPIO_t          photogate = { .port = GPIOE, .pin = GPIO_PIN_12 };
+GPIO_PinState   gate;
 
 void TIM_Callback_1kHz(TIM_HandleTypeDef* htim)
 {
-    APP_Chassis_Update_1kHz();
+    // APP_Chassis_Update_1kHz();
+    //
+    // APP_Device_Update();
+    SteeringWheel_ControlUpdate(&wheel);
 
-    APP_Device_Update();
+    DJI_SendSetIqCommand(&hcan1, IQ_CMD_GROUP_1_4);
 }
 
 void TIM_Callback_200Hz(TIM_HandleTypeDef* htim)
 {
-    APP_Chassis_Update_200Hz();
+    // APP_Chassis_Update_200Hz();
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t pin)
+{
+    GPIO_EXTI_Callback(pin);
 }
 
 /**
@@ -37,22 +55,103 @@ void TIM_Callback_200Hz(TIM_HandleTypeDef* htim)
 void Init(void* argument)
 {
     /* 初始化代码 */
-    APP_Device_Init();
+    DJI_CAN_FilterInit(&hcan1, 0);
+    VESC_CAN_FilterInit(&hcan1, 1);
+    CAN_RegisterCallback(&hcan1, DJI_CAN_BaseReceiveCallback);
+    CAN_RegisterCallback(&hcan1, VESC_CAN_BaseReceiveCallback);
 
-    APP_Chassis_InitBeforeUpdate();
+    HAL_CAN_RegisterCallback(&hcan1, HAL_CAN_RX_FIFO0_MSG_PENDING_CB_ID, CAN_Fifo0ReceiveCallback);
+    CAN_Start(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING);
 
-    // 注册定时器
+    DJI_Init(&steerer_motor,
+             &(DJI_Config_t) { .auto_zero      = true,
+                               .hcan           = &hcan1,
+                               .id1            = 4,
+                               .motor_type     = M2006_C610,
+                               .reduction_rate = 2.0f,
+                               .reverse        = true });
+    VESC_Init(&driver_motor,
+              &(VESC_Config_t) {
+                      .auto_zero  = true,
+                      .hcan       = &hcan1,
+                      .id         = 23,
+                      .electrodes = 14,
+              });
+
+    Motor_VelCtrl_Init(
+            &steerer_motor_vel_ctrl,
+            &(Motor_VelCtrlConfig_t) {
+                    .motor      = &steerer_motor,
+                    .motor_type = MOTOR_TYPE_DJI,
+                    .pid = { .Kp = 60.0f, .Ki = 0.2f, .Kd = 0.0f, .abs_output_max = 4000.0f },
+            });
+
+    Motor_PosCtrl_Init(&steerer_motor_pos_ctrl,
+                       &(Motor_PosCtrlConfig_t) {
+                               .motor        = &steerer_motor,
+                               .motor_type   = MOTOR_TYPE_DJI,
+                               .velocity_pid = { .Kp             = 60.0f,
+                                                 .Ki             = 0.2f,
+                                                 .Kd             = 0.0f,
+                                                 .abs_output_max = 4000.0f },
+                           .position_pid = {
+                                   .Kp = 2.8f,
+                                   .Ki = 0.06f,
+                                   .Kd = 0.0f,
+                                   .abs_output_max = 250.0f,
+                           },
+                           .pos_vel_freq_ratio = 10,
+                       });
+    Motor_VelCtrl_Init(&driver_motor_ctrl,
+                       &(Motor_VelCtrlConfig_t) {
+                               .motor_type = MOTOR_TYPE_VESC,
+                               .motor      = &driver_motor,
+                       });
+
+    SteeringWheel_Init(&wheel,
+                       &(SteeringWheel_Config_t) {
+                               .drive_motor  = &driver_motor_ctrl,
+                               .steer_motor  = &steerer_motor_pos_ctrl,
+                               .steer_offset = 10.0f,
+                               .calib        = {
+                               .photogate = {
+                                   .port = GPIOE,
+                                   .pin = GPIO_PIN_12,
+                               },
+                               .photogate_triggered_state = GPIO_PIN_RESET,
+                               .steer_motor = &steerer_motor_vel_ctrl},
+                       });
+
     HAL_TIM_RegisterCallback(&htim6, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM_Callback_1kHz);
     HAL_TIM_Base_Start_IT(&htim6);
-    HAL_TIM_RegisterCallback(&htim13, HAL_TIM_PERIOD_ELAPSED_CB_ID, TIM_Callback_200Hz);
-    HAL_TIM_Base_Start_IT(&htim13);
 
-    // 一秒钟时间等待各种东西更新
+    __MOTOR_CTRL_ENABLE(&driver_motor_ctrl);
+
     osDelay(1000);
 
-    APP_Chassis_Init();
+    SteeringWheel_StartCalibration(&wheel);
 
-    osEventFlagsSet(systemEventHandle, SYSTEM_INITIALIZED);
+    while (wheel.calib.state != STEER_CALIB_DONE)
+        osDelay(1);
+    osDelay(2000);
+    SteeringWheel_SetVelocity(&wheel,
+                              &(SteeringWheel_Velocity_t) {
+                                      .angle = 90.0f,
+                                      .speed = 1.0f,
+                              });
+    osDelay(5000);
+    SteeringWheel_SetVelocity(&wheel,
+                              &(SteeringWheel_Velocity_t) { .angle = -45.0f, .speed = 1.0f });
+    osDelay(5000);
+    SteeringWheel_SetVelocity(&wheel,
+                              &(SteeringWheel_Velocity_t) { .angle = -90.0f, .speed = -1.0f });
+    osDelay(5000);
+    SteeringWheel_SetVelocity(&wheel, &(SteeringWheel_Velocity_t) { .angle = 0.0f, .speed = 2.0f });
+
+    for (;;)
+    {
+        osDelay(1);
+    }
 
     /* 初始化完成后退出线程 */
     osThreadExit();
