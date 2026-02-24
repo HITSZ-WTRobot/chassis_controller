@@ -1,5 +1,7 @@
 # Chassis Controller
 
+**!IMPORTANT This repository is no longer maintained. Please visit https://github.com/HITSZ-WTRobot-Packages/ChassisController**
+
 _A modular and extensible chassis control framework_
 
 ## Include
