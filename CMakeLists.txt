@@ -85,7 +85,7 @@ set(ENABLE_CONTROLLERS ON) # 启用 controller
 
 set(ENABLE_DJI_DRIVER ON)
 set(ENABLE_TB6612_DRIVER OFF)
-set(ENABLE_VESC_DRIVER OFF)
+set(MotorIF_UseVESC ON)
 set(ENABLE_DM_DRIVER OFF)
 add_subdirectory(Modules/motor_drivers/UserCode)
 
